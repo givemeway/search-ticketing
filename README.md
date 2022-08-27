@@ -8,3 +8,5 @@
 **Supported Input files**
 1. Emails in MBOX format
 2. Emails in EML format
+
+**The computer where the code runs has to be connected to IDrive Inc network**
