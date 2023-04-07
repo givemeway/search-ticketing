@@ -2,7 +2,7 @@
 from PyQt5.QtWidgets import QApplication,QMainWindow,QFileDialog,\
      QTableWidgetItem,QMessageBox,QLabel
 from PyQt5.QtCore import QObject,pyqtSignal,QThread,pyqtSlot,QTimer
-from PyQt5.QtGui import QMovie
+from PyQt5.QtGui import QMovie,QIcon
 from PyQt5 import QtGui
 import sys
 from parse import get_mbox, process_emls
@@ -188,6 +188,9 @@ class MainApp(QMainWindow):
         self.ui.tableWidget_4.customContextMenuRequested.connect(self.ui.tableWidget_4.generateMenu)
         self.ui.tableWidget_5.customContextMenuRequested.connect(self.ui.tableWidget_5.generateMenu)
         self.ui.tableWidget_6.customContextMenuRequested.connect(self.ui.tableWidget_6.generateMenu)
+
+        self.green_clip_icon = QIcon(get_path("icons/paper-clip.png"))
+        self.red_clip_icon = QIcon(get_path("icons/attachment.png"))
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
             close = QMessageBox.question(
@@ -396,16 +399,30 @@ class MainApp(QMainWindow):
     def updateTable(self,table,item,insert=None,colCount=4,search=None):
         if insert is not None:
             table.insertRow(int(item[0]))
-        
         for i in range(colCount):
+            subject_item = QTableWidgetItem()
             if i !=1:
-                table.setItem(int(item[0])-1,i,QTableWidgetItem(f"{item[i]}"))
+                if len(item) == 6:
+                    if i == 2 and item[5]:
+                        subject_item.setIcon(self.green_clip_icon)
+                else:
+                    if isinstance(item[4],list):
+                        if len(item[4])>0 and i == 2:
+                            subject_item.setIcon(self.green_clip_icon)
+                    elif isinstance(item[4],str) and i == 2:
+                        attach_string = item[4].strip("[]")
+                        if len(attach_string) > 0 :
+                            subject_item.setIcon(self.green_clip_icon)
+                subject_item.setText(f"{item[i]}")
+                table.setItem(int(item[0])-1,i,subject_item)
             elif i == 1:
                 if isinstance(item[1],list):
                     if len(item[1]) == 1:
-                        table.setItem(int(item[0])-1,i,QTableWidgetItem(f"{item[1][0]}"))
+                        subject_item.setText(f"{item[1][0]}")
+                        table.setItem(int(item[0])-1,i,subject_item)
                     else:
-                        table.setItem(int(item[0])-1,i,QTableWidgetItem(f"{item[1]}"))
+                        subject_item.setText(f"{item[1]}")
+                        table.setItem(int(item[0])-1,i,subject_item)
                 else:
                     
                     if search is not None:
@@ -415,7 +432,8 @@ class MainApp(QMainWindow):
                         table.setCellWidget(int(item[0])-1,i,self.label)
                         
                     else:
-                        table.setItem(int(item[0])-1,i,QTableWidgetItem(f"{item[1]}"))
+                        subject_item.setText(f"{item[1]}")
+                        table.setItem(int(item[0])-1,i,subject_item)
             if i == 3:
                 if isinstance(item[3],Exception):
                     for j in range(colCount):

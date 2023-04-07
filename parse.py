@@ -5,6 +5,7 @@ import datetime,re,time,os,logging,mailbox,glob
 from multiprocessing.pool import ThreadPool
 from login import create_connection
 import mbox
+import base64
 
 
 try:
@@ -71,6 +72,11 @@ def get_mbox(path,progress,loading,progress_bar):
         mboxs = [mbox for mbox in glob.glob(f"{path}/**/*.mbox",recursive=True)]
         if len(mboxs)>=1:
             for idx,m in enumerate(mboxs):
+                    mbox_name = ""
+                    try:
+                        mbox_name = os.path.dirname(m).split("Takeout")[0].split("/")[-1].split("\\")[0] + ".zip "
+                    except Exception as e:
+                        error.exception(e)
                     loading.emit((1,f'Loading Mbox {idx+1} into memory'))
                     # print(f'Loading Mbox {idx+1} into memory')
                     mboxObj = mailbox.mbox(m)
@@ -78,7 +84,7 @@ def get_mbox(path,progress,loading,progress_bar):
                     total_emails = len(mboxObj)
                     # print("Emails Detected in Mbox {} : {}".format(idx+1,total_emails))
                     loading.emit((2,f"Emails Detected in Mbox {idx+1} : {total_emails}",total_emails))
-                    emails.extend(parse_mbox(mboxObj,total_emails,progress,progress_bar))
+                    emails.extend(parse_mbox(mbox_name,mboxObj,total_emails,progress,progress_bar))
             return emails
         else:
             return None
@@ -184,8 +190,23 @@ def parse_eml(eml):
         error.exception(f"File Parse Error: Name: {eml} : {e}")
         return [1,eml,"File inaccessible or too long",e]
 
+def find_attachment(msg):
+    attachments = []
+    if msg.get_content_maintype() == 'multipart':
+        # Iterate through the message's payload (i.e., the attachments)
+        for part in msg.get_payload():
+        # Check if the part is an attachment
+            if part.get_content_disposition() == 'attachment':
+                try:
+                    #  Extract the size of the attachment from the "Content-Length" header field
+                    attachment_data = part.get_payload(decode=True)
+                    size = size = len(base64.b64decode(attachment_data))
+                    attachments.append(size)
+                except Exception as e:
+                    error.exception(e)
+    return attachments
 
-def parse_mbox(mboxObj,total_emails,progress,progress_bar):
+def parse_mbox(mbox_name,mboxObj,total_emails,progress,progress_bar):
         global items
         time_format = """%a, %b %d, %I:%M %p"""
         from_email=[]
@@ -193,15 +214,15 @@ def parse_mbox(mboxObj,total_emails,progress,progress_bar):
         if conn is not None:
             with conn:
                 cur = conn.cursor()
-                query = '''INSERT INTO emails(EMAIL,SUBJECT,DATE)
-                        VALUES(?,?,?)'''
+                query = '''INSERT INTO emails(EMAIL,SUBJECT,DATE,ATTACHMENT)
+                        VALUES(?,?,?,?)'''
                 mbox_query = '''SELECT * FROM mbox ORDER BY ID DESC LIMIT 1'''
                 cur.execute(mbox_query)
                 row = cur.fetchone()
                 insert_query = '''INSERT INTO mbox(DATE,ITEMS,START,END)
                     VALUES(?,?,?,?)'''
                 t = time.localtime()
-                current_time = time.strftime("""%d-%m-%Y %I:%M:%S %p""",t)
+                current_time = mbox_name + "[" + time.strftime("""%d-%m-%Y %I:%M:%S %p""",t) + "]"
                 if row is None:
                     value = (current_time,total_emails,1,total_emails)
                     cur.execute(insert_query,value)
@@ -212,7 +233,10 @@ def parse_mbox(mboxObj,total_emails,progress,progress_bar):
                 for idx,msg in enumerate(mboxObj):
                     items +=1
                     per = round((idx/total_emails)*100)
+                    
+                    attachments = find_attachment(msg)
                     progress_bar.emit((per,idx+1,msg['From']))
+
                     if  "support@idrive.com" in regex.findall(msg['From']) or \
                         "no-reply@idrive.com" in regex.findall(msg['From']) or \
                         "sales@idrive.com" in regex.findall(msg['From']) or \
@@ -246,9 +270,9 @@ def parse_mbox(mboxObj,total_emails,progress,progress_bar):
                             timestamp = get_timestamp(msg['Date'])
                             t = time.localtime(timestamp)
                             local_time = time.strftime(time_format,t)
-                            value = (f'''{emails[:3]}''',msg['Subject'], local_time)
-                            from_email.append([items,emails[:3],msg['Subject'],local_time])
-                            progress.emit([items,emails[:3],msg['Subject'],local_time])
+                            value = (f'''{emails[:3]}''',msg['Subject'], local_time,f'''{attachments}''')
+                            from_email.append([items,emails[:3],msg['Subject'],local_time,attachments])
+                            progress.emit([items,emails[:3],msg['Subject'],local_time,attachments])
                             cur.execute(query,value)
                         except Exception as e:
                             error.exception(f"Logging Error: {e} - {msg['X-Original-Sender']} - {msg['Subject']}")
@@ -258,14 +282,14 @@ def parse_mbox(mboxObj,total_emails,progress,progress_bar):
                         "group1@remotepc.com" in regex.findall(msg['From']):
                         try:
                             logger.info('Emails: {} : Subject: {} : TimeStamp : {}'.format( \
-                                regex.findall(msg['X-Original-Sender']),msg['Subject'],msg['Date']))
+                                regex.findall(msg['X-Original-Sender']),msg['Subject'],msg['Date'],attachments))
                             
                             timestamp = get_timestamp(msg['Date'])
                             t = time.localtime(timestamp)
                             local_time = time.strftime(time_format,t)
-                            value = (f'''{regex.findall(msg['X-Original-Sender'])}''',msg['Subject'],local_time)
-                            progress.emit([items,regex.findall(msg['X-Original-Sender']),msg['Subject'],local_time])
-                            from_email.append([items,regex.findall(msg['X-Original-Sender']),msg['Subject'],local_time])
+                            value = (f'''{regex.findall(msg['X-Original-Sender'])}''',msg['Subject'],local_time,f'''{attachments}''')
+                            progress.emit([items,regex.findall(msg['X-Original-Sender']),msg['Subject'],local_time,attachments])
+                            from_email.append([items,regex.findall(msg['X-Original-Sender']),msg['Subject'],local_time,attachments])
                             cur.execute(query,value)
                         except Exception as e:
                             error.exception(f"Logging Error : {e} - {msg['X-Original-Sender']}")    
@@ -273,14 +297,14 @@ def parse_mbox(mboxObj,total_emails,progress,progress_bar):
                     else:
                         try:
                             logger.info('Emails: {} : Subject: {} : TimeStamp : {}'.format(\
-                                regex.findall(msg['From']),msg['Subject'],msg['Date']))
+                                regex.findall(msg['From']),msg['Subject'],msg['Date'],attachments))
                             
                             timestamp = get_timestamp(msg['Date'])
                             t = time.localtime(timestamp)
                             local_time = time.strftime(time_format,t)
-                            value = (f'''{regex.findall(msg['From'])}''',msg['Subject'],local_time)
-                            progress.emit([items,regex.findall(msg['From']),msg['Subject'],local_time])
-                            from_email.append([items,regex.findall(msg['From']),msg['Subject'],local_time])
+                            value = (f'''{regex.findall(msg['From'])}''',msg['Subject'],local_time,f'''{attachments}''')
+                            progress.emit([items,regex.findall(msg['From']),msg['Subject'],local_time,attachments])
+                            from_email.append([items,regex.findall(msg['From']),msg['Subject'],local_time,attachments])
                             cur.execute(query,value)
                         except Exception as e:
                             error.exception(f"Logging Error : {e} - {msg['From']}")    

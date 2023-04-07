@@ -55,7 +55,8 @@ def create_email_table(conn):
     (ID INTEGER PRIMARY KEY NOT NULL,
      EMAIL TEXT,
      SUBJECT TEXT,
-     DATE TEXT
+     DATE TEXT,
+     ATTACHMENT TEXT
      );''')
     conn.execute('PRAGMA journal_mode = WAL;')
 
@@ -64,7 +65,8 @@ def create_emailNotFound_table(conn):
     ( ID INTEGER PRIMARY KEY NOT NULL,
       EMAIL TEXT,
       SUBJECT TEXT,
-      DATE TEXT
+      DATE TEXT,
+      ATTACHMENT TEXT
     );''')
     conn.execute('PRAGMA journal_mode = WAL;')
 
@@ -73,7 +75,8 @@ def create_subjectNotFound_table(conn):
     ( ID INTEGER PRIMARY KEY NOT NULL,
       EMAIL TEXT,
       SUBJECT TEXT,
-      DATE TEXT
+      DATE TEXT,
+      ATTACHMENT TEXT
     );''')
     conn.execute('PRAGMA journal_mode = WAL;')
 

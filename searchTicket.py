@@ -61,7 +61,6 @@ def ticketing(_dict):
     email_idx = 0
     subject_idx = 0
     err_idx = 0
-
     exclude_list = fetchExcludeList()
     event = Event()
     abnormal = False
@@ -107,10 +106,10 @@ def fetch_ticket(chunk_tickets,_dict,event):
                 # email_idx = 0
                 # subject_idx = 0
 
-                email_query ='''INSERT INTO emailnotfound(EMAIL,SUBJECT,DATE)
-                                VALUES(?,?,?) '''
-                sub_query ='''INSERT INTO subjectnotfound(EMAIL,SUBJECT,DATE)
-                        VALUES(?,?,?)'''
+                email_query ='''INSERT INTO emailnotfound(EMAIL,SUBJECT,DATE,ATTACHMENT)
+                                VALUES(?,?,?,?) '''
+                sub_query ='''INSERT INTO subjectnotfound(EMAIL,SUBJECT,DATE,ATTACHMENT)
+                        VALUES(?,?,?,?)'''
                 conn = create_connection('ticket.db')
                 # temp_error = None
                 with conn:
@@ -123,7 +122,7 @@ def fetch_ticket(chunk_tickets,_dict,event):
                                 if len(item)>0:
 
                                     if item.lower() not in exclude_list:
-                        
+                                        
                                         r = search_query(_dict['session'],item)
                                         if isinstance(r,str):
                                             if str(r).startswith('error-'):
@@ -159,7 +158,7 @@ def fetch_ticket(chunk_tickets,_dict,event):
                                                             val = "Level 1 : Email: "+ item + " Subject: " + " "
                                                         if len(re.findall(idriveinc_domain_regex,val))==0:
                                                             missing_ticket.debug(val)
-                                                            value = (item,ticket[2],ticket[3])
+                                                            value = (item,ticket[2],ticket[3],f'''{ticket[4]}''')
                                                             cur.execute(email_query,value)
                                                             cur.connection.commit()
                                                             temp = ticket
@@ -182,7 +181,7 @@ def fetch_ticket(chunk_tickets,_dict,event):
                                                                 val = "Level 2: Email: "+ item + " Subject: " + " "
                                                             if len(re.findall(idriveinc_domain_regex,val))==0:
                                                                 missing_ticket.debug(val)
-                                                                value = (item,ticket[2],ticket[3])
+                                                                value = (item,ticket[2],ticket[3],f'''{ticket[4]}''')
                                                                 cur.execute(sub_query,value)
                                                                 cur.connection.commit()
                                                                 temp = ticket
@@ -201,7 +200,7 @@ def fetch_ticket(chunk_tickets,_dict,event):
                                                                         val = "Level 3: Email: "+ item + " Subject: " + " "
                                                                     if len(re.findall(idriveinc_domain_regex,val))==0:
                                                                         missing_ticket.debug(val) 
-                                                                        value = (item,ticket[2],ticket[3])
+                                                                        value = (item,ticket[2],ticket[3],f'''{ticket[4]}''')
                                                                         cur.execute(sub_query,value)
                                                                         cur.connection.commit()
                                                                         temp = ticket

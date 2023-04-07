@@ -19,8 +19,12 @@ def extract_search(soup):
                 search_obj['created']= td.text.strip()
             elif i==3:
                 children = td.findChildren('div',recursive=True)
+                attachments = td.findChildren('i',attrs={"class":"icon-paperclip"},recursive=True)
                 for child in children:
                     search_obj['subject'] = child.text.strip()
+                if len(attachments):
+                    for _ in attachments:
+                        search_obj['attachment'] = 1
             elif i==5:
                 search_obj['status']= td.text.strip()
             else:
@@ -37,7 +41,7 @@ def search_ticket(s,string,result):
     idx = 1
     if len(data) > 0:
         for item in data.values():
-            result.emit([idx,item['ticket'],item['subject'],item['status'],item['created']])
+            result.emit([idx,item['ticket'],item['subject'],item['status'],item['created'],item['attachment'] if 'attachment' in item else 0])
             idx +=1
     else:
         result.emit(None)
