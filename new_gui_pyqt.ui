@@ -21,7 +21,7 @@
    <string>Ticketing Search</string>
   </property>
   <property name="windowIcon">
-   <iconset>
+   <iconset resource="new_gui_pyqt.qrc">
     <normaloff>:/icons/icons/favicon.ico</normaloff>:/icons/icons/favicon.ico</iconset>
   </property>
   <property name="windowOpacity">
@@ -199,7 +199,7 @@ QPushButton:hover
                  <string>Find</string>
                 </property>
                 <property name="icon">
-                 <iconset>
+                 <iconset resource="new_gui_pyqt.qrc">
                   <normaloff>:/icons/icons/1492.gif</normaloff>:/icons/icons/1492.gif</iconset>
                 </property>
                 <property name="iconSize">
@@ -250,7 +250,7 @@ QPushButton:hover
                  <string>Transferred</string>
                 </property>
                 <property name="icon">
-                 <iconset>
+                 <iconset resource="new_gui_pyqt.qrc">
                   <normaloff>:/icons/icons/transfer.png</normaloff>:/icons/icons/transfer.png</iconset>
                 </property>
                 <property name="iconSize">
@@ -303,7 +303,7 @@ QPushButton:hover
                  <string>Parse</string>
                 </property>
                 <property name="icon">
-                 <iconset>
+                 <iconset resource="new_gui_pyqt.qrc">
                   <normaloff>:/icons/icons/parsing.png</normaloff>:/icons/icons/parsing.png</iconset>
                 </property>
                 <property name="iconSize">
@@ -429,7 +429,7 @@ QPushButton:pressed
                     <string/>
                    </property>
                    <property name="icon">
-                    <iconset>
+                    <iconset resource="new_gui_pyqt.qrc">
                      <normaloff>:/icons/icons/down-arrow-square-outlined-button.png</normaloff>:/icons/icons/down-arrow-square-outlined-button.png</iconset>
                    </property>
                   </widget>
@@ -499,7 +499,7 @@ QPushButton:pressed
                 </font>
                </property>
                <property name="currentIndex">
-                <number>0</number>
+                <number>3</number>
                </property>
                <widget class="QWidget" name="parser_page">
                 <property name="minimumSize">
@@ -650,7 +650,7 @@ QPushButton:pressed
                        <string/>
                       </property>
                       <property name="icon">
-                       <iconset>
+                       <iconset resource="new_gui_pyqt.qrc">
                         <normaloff>:/icons/icons/folder.png</normaloff>:/icons/icons/folder.png</iconset>
                       </property>
                       <property name="iconSize">
@@ -693,7 +693,7 @@ color: rgb(240, 240, 240);</string>
                        <string>Submit</string>
                       </property>
                       <property name="icon">
-                       <iconset>
+                       <iconset resource="new_gui_pyqt.qrc">
                         <normaloff>:/icons/icons/enter (1).png</normaloff>:/icons/icons/enter (1).png</iconset>
                       </property>
                       <property name="iconSize">
@@ -749,7 +749,7 @@ QPushButton:pressed
                        <string/>
                       </property>
                       <property name="icon">
-                       <iconset>
+                       <iconset resource="new_gui_pyqt.qrc">
                         <normaloff>:/icons/icons/delete (1).png</normaloff>:/icons/icons/delete (1).png</iconset>
                       </property>
                       <property name="iconSize">
@@ -1004,7 +1004,7 @@ color: rgb(240, 240, 240);</string>
                        <string>Start Search</string>
                       </property>
                       <property name="icon">
-                       <iconset>
+                       <iconset resource="new_gui_pyqt.qrc">
                         <normaloff>:/icons/icons/1492.gif</normaloff>:/icons/icons/1492.gif</iconset>
                       </property>
                       <property name="iconSize">
@@ -1238,7 +1238,7 @@ color: rgb(240, 240, 240);</string>
                     <enum>Qt::NoContextMenu</enum>
                    </property>
                    <property name="currentIndex">
-                    <number>0</number>
+                    <number>2</number>
                    </property>
                    <widget class="QWidget" name="tab">
                     <property name="toolTip">
@@ -1482,7 +1482,7 @@ color: rgb(240, 240, 240);</string>
                           <string>Database</string>
                          </property>
                          <property name="icon">
-                          <iconset>
+                          <iconset resource="new_gui_pyqt.qrc">
                            <normaloff>:/icons/icons/database.png</normaloff>:/icons/icons/database.png</iconset>
                          </property>
                         </widget>
@@ -1493,7 +1493,7 @@ color: rgb(240, 240, 240);</string>
                           <string>Ticket</string>
                          </property>
                          <property name="icon">
-                          <iconset>
+                          <iconset resource="new_gui_pyqt.qrc">
                            <normaloff>:/icons/icons/favicon.ico</normaloff>:/icons/icons/favicon.ico</iconset>
                          </property>
                         </widget>
@@ -1507,9 +1507,6 @@ color: rgb(240, 240, 240);</string>
                           <property name="spacing">
                            <number>0</number>
                           </property>
-                          <property name="sizeConstraint">
-                           <enum>QLayout::SetMinAndMaxSize</enum>
-                          </property>
                           <property name="leftMargin">
                            <number>0</number>
                           </property>
@@ -1522,6 +1519,40 @@ color: rgb(240, 240, 240);</string>
                           <property name="bottomMargin">
                            <number>0</number>
                           </property>
+                          <item>
+                           <widget class="QPushButton" name="pushButton_7">
+                            <property name="font">
+                             <font>
+                              <family>Verdana</family>
+                              <pointsize>10</pointsize>
+                              <bold>true</bold>
+                             </font>
+                            </property>
+                            <property name="cursor">
+                             <cursorShape>PointingHandCursor</cursorShape>
+                            </property>
+                            <property name="styleSheet">
+                             <string notr="true">background-color:#0062A3;
+color:#F0F0F0;</string>
+                            </property>
+                            <property name="text">
+                             <string>Auto Search</string>
+                            </property>
+                            <property name="icon">
+                             <iconset resource="new_gui_pyqt.qrc">
+                              <normaloff>:/icons/icons/1492.gif</normaloff>:/icons/icons/1492.gif</iconset>
+                            </property>
+                            <property name="iconSize">
+                             <size>
+                              <width>16</width>
+                              <height>16</height>
+                             </size>
+                            </property>
+                            <property name="shortcut">
+                             <string>Return</string>
+                            </property>
+                           </widget>
+                          </item>
                           <item>
                            <widget class="QLineEdit" name="lineEdit">
                             <property name="minimumSize">
@@ -1598,7 +1629,7 @@ color:#F0F0F0;</string>
                              <string>Search</string>
                             </property>
                             <property name="icon">
-                             <iconset>
+                             <iconset resource="new_gui_pyqt.qrc">
                               <normaloff>:/icons/icons/1492.gif</normaloff>:/icons/icons/1492.gif</iconset>
                             </property>
                             <property name="iconSize">
@@ -1748,9 +1779,6 @@ color:#F0F0F0;</string>
                           <property name="spacing">
                            <number>0</number>
                           </property>
-                          <property name="sizeConstraint">
-                           <enum>QLayout::SetMinAndMaxSize</enum>
-                          </property>
                           <property name="leftMargin">
                            <number>0</number>
                           </property>
@@ -1818,7 +1846,7 @@ QPushButton:pressed
                              <string/>
                             </property>
                             <property name="icon">
-                             <iconset>
+                             <iconset resource="new_gui_pyqt.qrc">
                               <normaloff>:/icons/icons/reload-circular-arrow-symbol (1).png</normaloff>:/icons/icons/reload-circular-arrow-symbol (1).png</iconset>
                             </property>
                             <property name="iconSize">
@@ -1887,7 +1915,7 @@ color:#F0F0F0;</string>
                              <string>Load</string>
                             </property>
                             <property name="icon">
-                             <iconset>
+                             <iconset resource="new_gui_pyqt.qrc">
                               <normaloff>:/icons/icons/down-arrow.png</normaloff>:/icons/icons/down-arrow.png</iconset>
                             </property>
                             <property name="iconSize">
@@ -1946,7 +1974,7 @@ color:#F0F0F0;</string>
                              <enum>QTabWidget::Rounded</enum>
                             </property>
                             <property name="currentIndex">
-                             <number>0</number>
+                             <number>1</number>
                             </property>
                             <property name="documentMode">
                              <bool>false</bool>
@@ -1994,8 +2022,11 @@ color:#F0F0F0;</string>
                                 <property name="alternatingRowColors">
                                  <bool>true</bool>
                                 </property>
+                                <property name="selectionMode">
+                                 <enum>QAbstractItemView::ExtendedSelection</enum>
+                                </property>
                                 <property name="selectionBehavior">
-                                 <enum>QAbstractItemView::SelectRows</enum>
+                                 <enum>QAbstractItemView::SelectItems</enum>
                                 </property>
                                </widget>
                               </item>
@@ -2035,8 +2066,11 @@ color:#F0F0F0;</string>
                                 <property name="alternatingRowColors">
                                  <bool>true</bool>
                                 </property>
+                                <property name="selectionMode">
+                                 <enum>QAbstractItemView::ExtendedSelection</enum>
+                                </property>
                                 <property name="selectionBehavior">
-                                 <enum>QAbstractItemView::SelectRows</enum>
+                                 <enum>QAbstractItemView::SelectItems</enum>
                                 </property>
                                </widget>
                               </item>
@@ -2361,7 +2395,7 @@ color: rgb(250, 250, 250);</string>
                        <string>Login</string>
                       </property>
                       <property name="icon">
-                       <iconset>
+                       <iconset resource="new_gui_pyqt.qrc">
                         <normaloff>:/icons/icons/user (3).png</normaloff>:/icons/icons/user (3).png</iconset>
                       </property>
                       <property name="iconSize">

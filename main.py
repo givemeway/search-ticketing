@@ -1,6 +1,6 @@
 
 from PyQt5.QtWidgets import QApplication,QMainWindow,QFileDialog,\
-     QTableWidgetItem,QMessageBox,QLabel
+     QTableWidgetItem,QMessageBox,QLabel,QTableWidget
 from PyQt5.QtCore import QObject,pyqtSignal,QThread,pyqtSlot,QTimer
 from PyQt5.QtGui import QMovie,QIcon
 from PyQt5 import QtGui
@@ -167,6 +167,9 @@ class MainApp(QMainWindow):
         )
         self.ui.pushButton_5.clicked.connect(lambda:self.ui.frame_6.setHidden(True))
         # auto login if the app is previously logged in        
+
+        self.ui.pushButton_7.clicked.connect(self.enableAutoSearch)
+
         self.auto_login()
         self.comboIndex = None
         self.font = QtGui.QFont()
@@ -188,6 +191,12 @@ class MainApp(QMainWindow):
         self.ui.tableWidget_4.customContextMenuRequested.connect(self.ui.tableWidget_4.generateMenu)
         self.ui.tableWidget_5.customContextMenuRequested.connect(self.ui.tableWidget_5.generateMenu)
         self.ui.tableWidget_6.customContextMenuRequested.connect(self.ui.tableWidget_6.generateMenu)
+
+        self.ui.tableWidget_5.itemSelectionChanged.connect(lambda : self.autoSearch(self.ui.tableWidget_5))
+        self.ui.tableWidget_6.itemSelectionChanged.connect(lambda : self.autoSearch(self.ui.tableWidget_6))
+
+        self.isSearching = False
+        self.isAutoSearch = False
 
         self.green_clip_icon = QIcon(get_path("icons/paper-clip.png"))
         self.red_clip_icon = QIcon(get_path("icons/attachment.png"))
@@ -243,6 +252,19 @@ class MainApp(QMainWindow):
         animation.start()
     def stopAnimation(self,animation):
         animation.stop()    
+
+    def enableAutoSearch(self):
+        if not self.isAutoSearch:
+            self.isAutoSearch = True 
+            self.ui.pushButton_7.setText("Disable Auto Search")
+            self.ui.pushButton_7.setStyleSheet("background-color: rgb(0, 98, 163);\n"
+"color: rgb(0, 0, 0);")
+        else:
+            self.isAutoSearch = False 
+            self.ui.pushButton_7.setText("Enable Auto Search")
+            self.ui.pushButton_7.setStyleSheet("background-color: rgb(0, 98, 163);\n"
+"color: rgb(240, 240, 240);")
+
     def login(self):
         username = self.ui.username_field.text()
         password = self.ui.password_field.text()
@@ -645,9 +667,18 @@ class MainApp(QMainWindow):
                             if row[5] is not None:
                                 self.comboitems.append([row[0],row[1]])
                                 self.ui.comboBox.addItem(f"{row[0]}. {row[1]}")
+    def autoSearch(self,table):
+        if self.isAutoSearch:
+            for item in table.selectedItems():
+                if item.column() == 1 and not self.isSearching:
+                    query = item.text()
+                    self.ui.lineEdit.setText(query)
+                    self.querySearch(query)
 
-    def querySearch(self):
-        query = self.ui.lineEdit.text()
+    def querySearch(self,query=None):
+        self.isSearching = True
+        if not query:
+            query = self.ui.lineEdit.text()
         self.ui.tableWidget_6.setRowCount(0) #clear table
         self.ui.pushButton_2.setEnabled(False)
         self.ui.gif_search.setHidden(False)
@@ -673,6 +704,7 @@ class MainApp(QMainWindow):
     def searchResult(self,result):
         if result is not None:
             self.updateTable(self.ui.tableWidget_6,result,insert=True,colCount=5,search=True)
+        self.isSearching = False
                         
 if __name__=="__main__":
     app = QApplication(sys.argv)

@@ -1,0 +1,68 @@
+2023-04-07 20:43:34,928:ERROR:argument should be a bytes-like object or ASCII string, not 'NoneType'
+Traceback (most recent call last):
+  File "c:\Users\sandk\Desktop\ticket_automation\new code for ticket\pyqt5\parse.py", line 203, in find_attachment
+    size = size = len(base64.b64decode(attachment_data))
+  File "C:\Users\sandk\miniconda3\envs\pyqt5\lib\base64.py", line 80, in b64decode
+    s = _bytes_from_decode_data(s)
+  File "C:\Users\sandk\miniconda3\envs\pyqt5\lib\base64.py", line 45, in _bytes_from_decode_data
+    raise TypeError("argument should be a bytes-like object or ASCII "
+TypeError: argument should be a bytes-like object or ASCII string, not 'NoneType'
+2023-04-07 20:43:35,929:ERROR:Invalid base64-encoded string: number of data characters (457) cannot be 1 more than a multiple of 4
+Traceback (most recent call last):
+  File "c:\Users\sandk\Desktop\ticket_automation\new code for ticket\pyqt5\parse.py", line 203, in find_attachment
+    size = size = len(base64.b64decode(attachment_data))
+  File "C:\Users\sandk\miniconda3\envs\pyqt5\lib\base64.py", line 87, in b64decode
+    return binascii.a2b_base64(s)
+binascii.Error: Invalid base64-encoded string: number of data characters (457) cannot be 1 more than a multiple of 4
+2023-04-07 20:43:35,949:ERROR:argument should be a bytes-like object or ASCII string, not 'NoneType'
+Traceback (most recent call last):
+  File "c:\Users\sandk\Desktop\ticket_automation\new code for ticket\pyqt5\parse.py", line 203, in find_attachment
+    size = size = len(base64.b64decode(attachment_data))
+  File "C:\Users\sandk\miniconda3\envs\pyqt5\lib\base64.py", line 80, in b64decode
+    s = _bytes_from_decode_data(s)
+  File "C:\Users\sandk\miniconda3\envs\pyqt5\lib\base64.py", line 45, in _bytes_from_decode_data
+    raise TypeError("argument should be a bytes-like object or ASCII "
+TypeError: argument should be a bytes-like object or ASCII string, not 'NoneType'
+2023-04-07 20:43:36,206:ERROR:Invalid base64-encoded string: number of data characters (6441) cannot be 1 more than a multiple of 4
+Traceback (most recent call last):
+  File "c:\Users\sandk\Desktop\ticket_automation\new code for ticket\pyqt5\parse.py", line 203, in find_attachment
+    size = size = len(base64.b64decode(attachment_data))
+  File "C:\Users\sandk\miniconda3\envs\pyqt5\lib\base64.py", line 87, in b64decode
+    return binascii.a2b_base64(s)
+binascii.Error: Invalid base64-encoded string: number of data characters (6441) cannot be 1 more than a multiple of 4
+2023-04-07 20:43:36,206:ERROR:Incorrect padding
+Traceback (most recent call last):
+  File "c:\Users\sandk\Desktop\ticket_automation\new code for ticket\pyqt5\parse.py", line 203, in find_attachment
+    size = size = len(base64.b64decode(attachment_data))
+  File "C:\Users\sandk\miniconda3\envs\pyqt5\lib\base64.py", line 87, in b64decode
+    return binascii.a2b_base64(s)
+binascii.Error: Incorrect padding
+2023-04-07 20:43:36,206:ERROR:Incorrect padding
+Traceback (most recent call last):
+  File "c:\Users\sandk\Desktop\ticket_automation\new code for ticket\pyqt5\parse.py", line 203, in find_attachment
+    size = size = len(base64.b64decode(attachment_data))
+  File "C:\Users\sandk\miniconda3\envs\pyqt5\lib\base64.py", line 87, in b64decode
+    return binascii.a2b_base64(s)
+binascii.Error: Incorrect padding
+2023-04-07 20:43:37,133:ERROR:argument should be a bytes-like object or ASCII string, not 'NoneType'
+Traceback (most recent call last):
+  File "c:\Users\sandk\Desktop\ticket_automation\new code for ticket\pyqt5\parse.py", line 203, in find_attachment
+    size = size = len(base64.b64decode(attachment_data))
+  File "C:\Users\sandk\miniconda3\envs\pyqt5\lib\base64.py", line 80, in b64decode
+    s = _bytes_from_decode_data(s)
+  File "C:\Users\sandk\miniconda3\envs\pyqt5\lib\base64.py", line 45, in _bytes_from_decode_data
+    raise TypeError("argument should be a bytes-like object or ASCII "
+TypeError: argument should be a bytes-like object or ASCII string, not 'NoneType'
+2023-04-07 20:43:38,152:ERROR:Invalid base64-encoded string: number of data characters (4393) cannot be 1 more than a multiple of 4
+Traceback (most recent call last):
+  File "c:\Users\sandk\Desktop\ticket_automation\new code for ticket\pyqt5\parse.py", line 203, in find_attachment
+    size = size = len(base64.b64decode(attachment_data))
+  File "C:\Users\sandk\miniconda3\envs\pyqt5\lib\base64.py", line 87, in b64decode
+    return binascii.a2b_base64(s)
+binascii.Error: Invalid base64-encoded string: number of data characters (4393) cannot be 1 more than a multiple of 4
+2023-04-07 20:50:04,475:ERROR:Error-500: [822, ['you.end.the.end@gmail.com'], 'Re: ***Important Your IDrive Subscription Charges: Unable to process\n subscription charges', 'Mon, Apr 03, 02:17 PM', []]
+NoneType: None
+2023-04-07 20:50:09,420:ERROR:Error-500: [834, ['support@one-stop-it.com'], 'Ticket Received - *** Your IDrive account exceeds quota ***', 'Sun, Apr 02, 03:15 PM', []]
+NoneType: None
+2023-04-07 20:52:17,736:ERROR:Error-500: [1094, ['idrive-test@hurt24.de'], 'IDrive : Please cancel subscription and refund payment. The...', 'Sun, Apr 02, 11:31 AM', []]
+NoneType: None
