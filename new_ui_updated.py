@@ -936,6 +936,7 @@ class Ui_TicketingSearchTool(object):
         self.tracker_csv_toolButton.setIcon(icon5)
         self.tracker_csv_toolButton.setIconSize(QtCore.QSize(20, 20))
         self.tracker_csv_toolButton.setObjectName("tracker_csv_toolButton")
+        self.tracker_csv_toolButton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.horizontalLayout_13.addWidget(self.tracker_csv_toolButton)
         self.tracker_pushButton = QtWidgets.QPushButton(self.escalation_groupBox)
         self.tracker_pushButton.setMinimumSize(QtCore.QSize(0, 0))

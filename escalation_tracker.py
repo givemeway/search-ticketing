@@ -190,7 +190,9 @@ def process_ticket(ticket,visited,payload):
         return {"ticket":ticket,"computed":False}
 
 def escalation_worker(_dict):
+    global idx
     processed = []
+    idx = 0
     _dict['agents_in_department'] = extract_departments("./departments.csv")
     visited = {}
     session = _dict['session']

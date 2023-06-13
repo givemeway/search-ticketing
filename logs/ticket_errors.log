@@ -1,0 +1,6 @@
+2023-06-13 17:13:05,244:ERROR:[Errno 13] Permission denied: './escalated.csv'
+Traceback (most recent call last):
+  File "c:\Users\Sandeep Kumar\Desktop\ticketing\escalation_tracker.py", line 236, in write_csv
+    with open(csvFilePath,'w',newline='',encoding='utf-8') as file:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [Errno 13] Permission denied: './escalated.csv'

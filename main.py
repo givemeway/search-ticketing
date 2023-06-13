@@ -201,7 +201,8 @@ class MainApp(QMainWindow):
 
         # escalated tracker
         # ============================================================ #
-        # self.ui.tracker_csv_toolButton.clicked.connect(self.selectCSV)
+        self.ui.tracker_csv_toolButton.clicked.connect(self.selectCSV)
+        self.ui.tracker_pushButton.setHidden(True)
         self.ui.tracker_pushButton.clicked.connect(self.escalationSearch)
 
         # ============================================================ #
@@ -238,15 +239,15 @@ class MainApp(QMainWindow):
         self.red_clip_icon = QIcon(get_path("icons/attachment.png"))
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
-            close = QMessageBox.question(
-                    self,
-                    'QUIT',
-                    'Are you sure you want to quit?',
-                     QMessageBox.Yes| QMessageBox.No)
-            if close == QMessageBox.Yes:
-                event.accept()
-            else:
-                event.ignore()
+        close = QMessageBox.question(
+                self,
+                'QUIT',
+                'Are you sure you want to quit?',
+                    QMessageBox.Yes| QMessageBox.No)
+        if close == QMessageBox.Yes:
+            event.accept()
+        else:
+            event.ignore()
 
     def disableTabs(self,hide=True):
         self.ui.btn_find.setDisabled(hide)
@@ -257,12 +258,45 @@ class MainApp(QMainWindow):
         widget.setText(text)
         widget.setStyleSheet(style)
 
+    def selectCSV(self):
+        msg = "Select CSV File with Tickets"
+        filter="CSV Files (*.csv)"
+        try:    
+            if os.path.exists("./logs/csvPath.log"):
+                with open("./logs/csvPath.log") as file:
+                    path = file.read()
+                    if len(path) > 0:
+                        prevCSVPath = path
+                    else:
+                        prevCSVPath = ""
+            else:
+                with open("./logs/csvPath.log","w") as file:
+                    file.write("")
+                prevCSVPath = ""
+        except Exception as e:
+                error.exception(e)
+
+        self.csvPath,_ = QFileDialog.getOpenFileName(self,msg,prevCSVPath,filter)
+        if len(self.csvPath) > 0:
+            self.ui.tracker_pushButton.setHidden(False)
+            try:    
+                with open("./logs/csvPath.log",'w') as file:
+                    file.write(os.path.dirname(self.csvPath))
+            except Exception as e:
+                error.exception(e)
+
     def escalationSearch(self):
         self.time =0
         self.timer=QTimer()
         self.timer.start(1000)
         self.timer.timeout.connect(self.Counter)
-        self.tickets = self.extract_tickets('./tickets.csv') 
+        self.tickets = []
+        self.ui.escalation_progressBar.setValue(0)
+        self.tickets = self.extract_tickets(self.csvPath) 
+        self.text_gif = QMovie(get_path('gifs/text_fading.gif'))
+        self.ui.escalation_groupLabel.setMovie(self.text_gif)
+        self.startAnimation(self.text_gif)
+
         self.escalationworker = EscalationWorker(self.tickets,self.session)
         self.escalationThread = QThread()
         self.escalationworker.moveToThread(self.escalationThread)
@@ -270,13 +304,18 @@ class MainApp(QMainWindow):
         self.escalationworker.finished.connect(self.escalationThread.quit)
         self.escalationworker.finished.connect(self.escalationworker.deleteLater)
         self.escalationworker.finished.connect(lambda: self.showDialog("Escalation Tracker",QMessageBox.Information,"Escalation Tracker Complete!"))
+        self.escalationworker.finished.connect(lambda: self.ui.tracker_pushButton.setEnabled(True))
+        self.escalationworker.finished.connect(lambda: self.stopAnimation(self.text_gif))
+        self.escalationworker.finished.connect(lambda: self.displaymsg(self.ui.escalation_groupLabel,text="Search Complete!",style="color: rgb(0, 98, 163);"))
         self.escalationworker.error.connect(self.escalationError)
         self.escalationworker.processing.connect(self.escalationProgress)
         self.escalationworker.pBar.connect(self.escalationProgressBar)
         self.escalationThread.finished.connect(self.escalationThread.deleteLater)
         self.escalationworker.warning.connect(self.escalationWarning)
         self.escalationThread.start()
+
         self.ui.escalation_processing_groupBox.setHidden(False)
+        self.ui.tracker_pushButton.setEnabled(False)
 
     @pyqtSlot(int)
     def escalationProgressBar(self,per):
