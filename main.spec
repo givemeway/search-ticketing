@@ -26,7 +26,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='TicketSearch',
+    name='Ticketing Search',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -47,5 +47,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='TicketingSearchTool',
+    name='Ticketing Search',
 )
