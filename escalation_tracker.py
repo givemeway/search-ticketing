@@ -123,17 +123,24 @@ def extract_departments(csvFilePath):
         return e
 
 def extract_agents(session,departments,department,visited):
-    ticket = departments[department]
-    ticketSearch = search_query(session,searchQuery=ticket)
-    searchSoup = BeautifulSoup(ticketSearch.content,'html5lib')
-    ticketURL = extract_ticket_url(searchSoup,ticket)
-    parse_result = urlparse(ticketURL)
-    ticketID = parse_qs(parse_result.query)['id'][0]
-    agentsURL = "https://ticket.idrive.com/scp/ajax.php/tickets/" + ticketID + "/assign/agents"
-    agents = set(get_agents_or_departments(session,agentsURL))
-    visited[department] = agents
-    return agents
+    try:
+        if department == "IDrive C2C":
+            ticketURL = departments[department]
+        else:
+            ticket = departments[department]
+            ticketSearch = search_query(session,searchQuery=ticket)
+            searchSoup = BeautifulSoup(ticketSearch.content,'html5lib')
+            ticketURL = extract_ticket_url(searchSoup,ticket)
+
+        parse_result = urlparse(ticketURL)
+        ticketID = parse_qs(parse_result.query)['id'][0]
+        agentsURL = "https://ticket.idrive.com/scp/ajax.php/tickets/" + ticketID + "/assign/agents"
+        agents = set(get_agents_or_departments(session,agentsURL))
+        visited[department] = agents
+        return agents
     
+    except Exception as e:
+        return None
 # def find_due_date(session,departments,escalated,\
 #                 notes,ticket,visited,assigned_agent):
 #     i = 0
