@@ -1,0 +1,87 @@
+<RCC>
+  <qresource prefix="icons">
+    <file>icons/folder.png</file>
+    <file>icons/down-arrow-square-outlined-button.png</file>
+    <file>icons/login (3).png</file>
+    <file>icons/login (2).png</file>
+    <file>icons/delete (1).png</file>
+    <file>icons/bin.png</file>
+    <file>icons/clear (1).png</file>
+    <file>icons/trash.png</file>
+    <file>icons/remove.png</file>
+    <file>icons/clear.png</file>
+    <file>icons/icons8-clear-symbol-48.png</file>
+    <file>icons/delete.png</file>
+    <file>icons/103.gif</file>
+    <file>icons/294 (1).gif</file>
+    <file>icons/294.gif</file>
+    <file>icons/294-1.gif</file>
+    <file>icons/1492.gif</file>
+    <file>icons/Blocks-1s-31px.gif</file>
+    <file>icons/circular-arrow (1).png</file>
+    <file>icons/circular-arrow (2).png</file>
+    <file>icons/circular-arrow.png</file>
+    <file>icons/database.png</file>
+    <file>icons/down-arrow.png</file>
+    <file>icons/download (1).png</file>
+    <file>icons/download.png</file>
+    <file>icons/Dual Ring-1s-31px.gif</file>
+    <file>icons/Ellipsis-1s-31px.gif</file>
+    <file>icons/enter (1).png</file>
+    <file>icons/enter.png</file>
+    <file>icons/favicon.ico</file>
+    <file>icons/Gear-0.2s-31px.gif</file>
+    <file>icons/login (1).png</file>
+    <file>icons/login.png</file>
+    <file>icons/Magnify-1s-50px.gif</file>
+    <file>icons/parsing.png</file>
+    <file>icons/Pulse-1s-31px.gif</file>
+    <file>icons/reload.png</file>
+    <file>icons/reload-circular-arrow-symbol (1).png</file>
+    <file>icons/reload-circular-arrow-symbol (2).png</file>
+    <file>icons/reload-circular-arrow-symbol.png</file>
+    <file>icons/search.png</file>
+    <file>icons/Spinner-1s-197px.gif</file>
+    <file>icons/Spinner-1s-211px.gif</file>
+    <file>icons/submit (1).png</file>
+    <file>icons/submit.png</file>
+    <file>icons/transfer (1).png</file>
+    <file>icons/transfer.png</file>
+    <file>icons/user (1).png</file>
+    <file>icons/user (2).png</file>
+    <file>icons/user (3).png</file>
+    <file>icons/user.png</file>
+    <file>icons/294 (1).gif</file>
+    <file>icons/294.gif</file>
+    <file>icons/294-1.gif</file>
+    <file>icons/1492.gif</file>
+    <file>icons/circular-arrow (1).png</file>
+    <file>icons/circular-arrow (2).png</file>
+    <file>icons/circular-arrow.png</file>
+    <file>icons/database.png</file>
+    <file>icons/down-arrow.png</file>
+    <file>icons/download (1).png</file>
+    <file>icons/download.png</file>
+    <file>icons/enter (1).png</file>
+    <file>icons/enter.png</file>
+    <file>icons/favicon.ico</file>
+    <file>icons/login (1).png</file>
+    <file>icons/login.png</file>
+    <file>icons/Magnify-1s-50px.gif</file>
+    <file>icons/parsing.png</file>
+    <file>icons/Pulse-1s-31px.gif</file>
+    <file>icons/reload.png</file>
+    <file>icons/reload-circular-arrow-symbol (1).png</file>
+    <file>icons/reload-circular-arrow-symbol (2).png</file>
+    <file>icons/reload-circular-arrow-symbol.png</file>
+    <file>icons/search.png</file>
+    <file>icons/submit (1).png</file>
+    <file>icons/submit.png</file>
+    <file>icons/transfer (1).png</file>
+    <file>icons/transfer.png</file>
+    <file>icons/user (1).png</file>
+    <file>icons/user (2).png</file>
+    <file>icons/user (3).png</file>
+    <file>icons/user.png</file>
+  </qresource>
+</RCC>
