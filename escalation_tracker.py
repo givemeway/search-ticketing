@@ -7,6 +7,7 @@ from datetime import datetime
 from searchTicket import search_query
 from concurrent.futures import ThreadPoolExecutor
 from parse import error
+from copy import deepcopy
 
 time = datetime.fromtimestamp
 
@@ -17,7 +18,7 @@ csvFilePath ="./escalated.csv"
 departmentURL = "https://ticket.idrive.com/scp/ajax.php/tickets/1319774/transfer"
 queryURL ='https://ticket.idrive.com/scp/tickets.php?sort=date&dir=0&a=search&search-type=&query='
 
-columns = ["Ticket","Due Since","Department","Assigned Agent","Developer","Developer Update","Agent Response","Agent Response Pending","Notes","Events"]
+columns = ["Ticket","Response to User","Ticket Due","Department","Assigned","Developer","Developer Update","Response to Dev","Response Pending to Dev Update","Notes","Events"]
 
 exclude = ['India Billing Support','India Support','Indiasupport Supervisors','Indiasupport SPAM',\
            'IndiaSupport Crisis','IDrive Support','IBackup Support','IndiaSupport Review',\
@@ -31,6 +32,8 @@ selector1 = ".thread-entry.note .header b"
 selector2 = ".thread-entry.note .header time"
 selector4 = ".thread-entry.response .header b"
 selector5 = ".thread-entry.response .header time"
+selector7 = ".thread-entry.message .header time"
+selector6 = ".thread-entry.message .header b"
 selector3 = ".thread-event.action .faded.description:has(>b:first-child):has(>time):has(>strong)"
 depart_head_selector = "div#content > :nth-child(3) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(3) >:nth-child(1)"
 depart_name_selector = "div#content > :nth-child(3) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(3) >:nth-child(2)"
@@ -56,6 +59,17 @@ def find_responses(soup,selector1,selector2):
                                  '%m/%d/%y, %I:%M %p').timestamp()    
                      })
     return responses
+
+def find_messages(soup,selector1,selector2):
+    messages = []
+    for b,time in zip_longest(soup.select(selector1),soup.select(selector2)):
+#         print(b.get_text().strip(),time.get_text().strip())
+        messages.append({"agent":b.get_text().strip(),\
+                      "time":time.get_text().strip(),\
+                      "timestamp": datetime.strptime(time.get_text().strip(),\
+                                 '%m/%d/%y, %I:%M %p').timestamp()    
+                     })
+    return messages
 
 def find_notes(soup,selector1,selector2):
     # .thread-entry.message .header  --> user response
@@ -124,61 +138,13 @@ def extract_departments(csvFilePath):
 
 def extract_agents(session,departments,department,visited):
     try:
-        if department == "IDrive C2C":
-            ticketURL = departments[department]
-        else:
-            ticket = departments[department]
-            ticketSearch = search_query(session,searchQuery=ticket)
-            searchSoup = BeautifulSoup(ticketSearch.content,'html5lib')
-            ticketURL = extract_ticket_url(searchSoup,ticket)
-
-        parse_result = urlparse(ticketURL)
-        ticketID = parse_qs(parse_result.query)['id'][0]
-        agentsURL = "https://ticket.idrive.com/scp/ajax.php/tickets/" + ticketID + "/assign/agents"
+        agentsURL = departments[department]
         agents = set(get_agents_or_departments(session,agentsURL))
         visited[department] = agents
         return agents
     
     except Exception as e:
         return None
-# def find_due_date(session,departments,escalated,\
-#                 notes,ticket,visited,assigned_agent):
-#     i = 0
-#     dev = None
-#     diff = None
-#     updateDuration = None
-#     assigned_agent_note = []
-#     assigned_agent_update = None
-#     notes_len = len(notes)
-#     if escalated is not None:
-#         if escalated['department'] not in visited:
-#              extract_agents(session,departments,escalated['department'],visited)
-#     while i < notes_len:
-#         item = notes.pop()
-#         if item['agent'] == assigned_agent:
-#             assigned_agent_note.append(item)
-#         if escalated is not None and item['timestamp'] > escalated['timestamp'] and \
-#             item['agent'] in visited[escalated['department']]:
-                
-#             updateDuration = datetime.fromtimestamp(item['timestamp']) - \
-#                                         datetime.fromtimestamp(escalated['timestamp'])
-#             if len(assigned_agent_note) > 0:
-#                 assigned_agent_update = datetime.fromtimestamp(assigned_agent_note[-1]['timestamp']) - \
-#                                                 datetime.fromtimestamp(item['timestamp'])
-                
-#             dev = item
-#             break
-#         i += 1
-#     if updateDuration is None and escalated is not None:
-#         diff = datetime.now() - datetime.fromtimestamp(escalated['timestamp'])
-        
-#     return {"ticket":ticket, \
-#             "due":str(diff),\
-#             "escalated":escalated,\
-#             "ifUpdatedTimeTaken":str(updateDuration),\
-#             "updatedAgent":dev,\
-#             "assignedAgentUpdate" : assigned_agent_update if assigned_agent_update else None
-#            }
 
 def find_due_date(session,departments,escalated,\
                 notes,ticket,visited,assigned_agent,responses):
@@ -186,53 +152,58 @@ def find_due_date(session,departments,escalated,\
     dev = None
     diff = None
     updateDuration = None
-    assigned_agent_res = None
-    assigned_agent_update = None
+    agent_res = None
+    agent_res_time = None
     dev_update_time = None
     agent_update_pending = None
     notes_len = len(notes)
     responses_len = len(responses)
-    
     j = 0
-    while j < responses_len:
-        res_item = responses.pop()
-        if res_item['agent'] == assigned_agent:
-            assigned_agent_res = res_item
-            break
-        j += 1
     
+    if "India Support" not in visited:
+        extract_agents(session,departments,"India Support",visited)
+
     if escalated is not None:
         if escalated['department'] not in visited:
-             extract_agents(session,departments,escalated['department'],visited)
-                
+             extract_agents(session,departments,escalated['department'],visited)   
+    
     while i < notes_len:
-        item = notes.pop()
+        note = notes.pop()
 
-        if escalated is not None and item['timestamp'] > escalated['timestamp'] and \
-            item['agent'] in visited[escalated['department']]:
-                
-            updateDuration = time(item['timestamp']) - time(escalated['timestamp'])
-            dev_update_time = time(item['timestamp']) 
-            if assigned_agent_res is not None:
-                if assigned_agent_res['timestamp'] > item['timestamp']:
-                    assigned_agent_update = time(assigned_agent_res['timestamp'])-time(item['timestamp'])
-            dev = item
+        if escalated is not None and note['timestamp'] > escalated['timestamp'] and \
+            note['agent'] in visited[escalated['department']]:  
+            updateDuration = datetime.now() - time(note['timestamp'])
+            dev_update_time = time(note['timestamp']) 
+            j = 0
+            while j < responses_len:
+                res = responses.pop()
+                if res['timestamp'] > note['timestamp']:
+                    if (res['agent'] == assigned_agent or res['agent'] in visited['India Support'] ):
+                        agent_res = res
+                else:
+                    break
+                j += 1
+            
+            if agent_res is not None:
+                agent_res_time = time(agent_res['timestamp']) - time(note['timestamp'])
+            dev = note
             break
+
         i += 1
+
     if updateDuration is None and escalated is not None:
         diff = datetime.now() - time(escalated['timestamp'])
-    if updateDuration is not None and assigned_agent_update is None:
+    if updateDuration is not None and agent_res is None:
         agent_update_pending = datetime.now() - dev_update_time
 
     return {"ticket":ticket, \
             "due":str(diff),\
             "escalated":escalated,\
-            "ifUpdatedTimeTaken":str(updateDuration),\
+            "Developer Update":str(updateDuration),\
             "updatedAgent":dev,\
-            "assignedAgentUpdate" : str(assigned_agent_update) if assigned_agent_update else None,\
+            "assignedAgentUpdate" : str(agent_res_time) if agent_res_time else None,\
             "agentUpdatePending" : str(agent_update_pending) if agent_update_pending else None
            }
-
 
 def get_ticket_html_content(session,ticket):
     try:
@@ -248,6 +219,22 @@ def get_ticket_html_content(session,ticket):
         error.exception(e)
         return None
     
+def find_res_pending(responses,messages):
+    i = 0
+    res_len = len(responses)
+    no_response = None
+    if messages:
+        msg = messages.pop()
+        while i < res_len:
+            res = responses.pop()
+            if msg['timestamp'] > res['timestamp']:
+                no_response = msg
+            else:
+                break
+            i += 1
+        return str(datetime.now() - time(no_response['timestamp'])) if no_response else "Updated"
+    return "Updated"
+    
 def process_ticket(ticket,visited,payload):
     global idx
     idx += 1
@@ -255,25 +242,32 @@ def process_ticket(ticket,visited,payload):
     session = payload['session']
     departments = payload['departments']
     agents_in_departments = payload['agents_in_department']
-    soup,assigned_depart,assigned_agent = get_ticket_html_content(session,ticket)
-    if(isinstance(soup,bs4.BeautifulSoup)):
-        notes = find_notes(soup,selector1,selector2)
-        responses = find_responses(soup,selector4,selector5)
-        events = find_ticket_events(soup,selector3)
-        notes_len = len(notes)
-        events_len = len(events)
-        escalated = find_last_escalated_item(events,departments)
-        due = find_due_date(session,agents_in_departments,\
-                            escalated,notes,ticket,visited,\
-                            assigned_agent,responses)
-        due['notes'] = notes_len
-        due['events'] = events_len
-        due['department'] = assigned_depart
-        due['assigned'] = assigned_agent
-        due['computed'] = True
-        per = math.ceil( (idx/payload['total'])*100 ) 
-        payload["pBar"].emit(per)
-        return due
+    html_soup = get_ticket_html_content(session,ticket)
+    if html_soup is not None:
+        soup,assigned_depart,assigned_agent = html_soup
+        if(isinstance(soup,bs4.BeautifulSoup)):
+            notes = find_notes(soup,selector1,selector2)
+            responses = find_responses(soup,selector4,selector5)
+            messages = find_messages(soup,selector6,selector7)
+            deepcopy_res = deepcopy(responses)
+            events = find_ticket_events(soup,selector3)
+            notes_len = len(notes)
+            events_len = len(events)
+            escalated = find_last_escalated_item(events,departments)
+            due = find_due_date(session,agents_in_departments,\
+                                escalated,notes,ticket,visited,\
+                                assigned_agent,responses)
+            due['UsersResponsePending'] = find_res_pending(deepcopy_res,messages)
+            due['notes'] = notes_len
+            due['events'] = events_len
+            due['department'] = assigned_depart
+            due['assigned'] = assigned_agent
+            due['computed'] = True
+            per = math.ceil( (idx/payload['total'])*100 ) 
+            payload["pBar"].emit(per)
+            return due
+        else:
+            return {"ticket":ticket,"computed":False}
     else:
         return {"ticket":ticket,"computed":False}
 
@@ -300,19 +294,21 @@ def create_dataframe_csv(processed_tickets):
     for row in processed_tickets:
         if row['computed']:
             df.append([row['ticket'],\
-                            row["due"],\
-                            row['department'],\
-                            row['assigned'],\
-                            None if row["updatedAgent"] is None else row["updatedAgent"]["agent"],\
-                            None if row["updatedAgent"] is None else \
-                                    datetime.now() - time(row["updatedAgent"]['timestamp']),\
-                            row['assignedAgentUpdate'],\
-                            row["agentUpdatePending"],\
-                            row['notes'],\
-                            row['events']
+                       row['UsersResponsePending'],\
+                        row["due"],\
+                        row['department'],\
+                        row['assigned'],\
+                        None if row["updatedAgent"] is None else row["updatedAgent"]["agent"],\
+                        None if row["updatedAgent"] is None else \
+                                datetime.now() - time(row["updatedAgent"]['timestamp']),\
+                        row['assignedAgentUpdate'],\
+                        row["agentUpdatePending"],\
+                        row['notes'],\
+                        row['events']
                         ])
         else:
             df.append([row['ticket'],\
+                            "Compute Error",\
                             "Compute Error",\
                             "Compute Error",\
                             "Compute Error",\

@@ -1,52 +1,40 @@
-Ticket,Due Since,Department,Assigned Agent,Developer,Developer Update,Agent Response,Agent Response Pending,Notes,Events
-ID202241533,None,India Support,Vinil PV,,,,,0,0
-ID482120336,None,India Support,Vinil PV,,,,,2,0
-ID406685948,None,India Support,Vinil PV,,,,,1,0
-ID376773343,None,India Support,Vinil PV,,,,,0,0
-ID847551159,None,India Support,Vinil PV,,,,,5,10
-ID842008295,None,India Support,Vinil PV,,,,,1,0
-ID295961209,None,India Support,Vinil PV,,,,,8,8
-ID200792408,None,India Support,Vinil PV,Harish R,9:46:18.130154,2:14:00,,4,6
-RP540324762,None,India Support,Vinil PV,,,,,0,0
-RP965087881,None,India Support,Vinil PV,,,,,0,0
-ID950043043,None,India Support,Vinil PV,,,,,1,2
-ID232067256,None,India Support,Vinil PV,,,,,0,0
-ID427990603,None,India Support,Vinil PV,,,,,0,0
-ID993551646,None,India Support,Vinil PV,,,,,1,0
-ID626205624,None,India Support,Vinil PV,,,,,0,0
-ID455807231,None,India Support,Vinil PV,,,,,0,0
-ID121997942,None,India Support,Vinil PV,,,,,0,0
-ID428182682,None,India Support,Vinil PV,,,,,0,0
-RP659315298,7:12:02.067564,Infra,Vinil PV,,,,,1,1
-ID195314737,None,Indiasupport Supervisors,Vinil PV,,,,,7,1
-ID269608491,None,India Support,Vinil PV,,,,,1,0
-ID377808007,None,Indiasupport Supervisors,Vinil PV,Narasimha P,"7 days, 9:31:18.130154","1 day, 3:38:00",,5,6
-ID507958459,None,Indiasupport Supervisors,Vinil PV,Kliment L,"6 days, 6:22:18.130154",,"6 days, 6:22:02.967626",4,5
-ID777981195,None,Indiasupport Supervisors,Vinil PV,dhritikana kalita,"1 day, 6:05:18.130154",,"1 day, 6:05:04.672872",13,20
-ID477854190,12:05:03.879141,Infra,Vinil PV,,,,,3,1
-ID513852423,None,India Support,Vinil PV,,,,,2,2
-ID499294056,None,India Support,Vinil PV,,,,,2,4
-RP606116185,None,Infra,Vinil PV,,,,,2,0
-ID477192085,None,India Support,Vinil PV,,,,,3,2
-ID675608574,None,India Support,Vinil PV,,,,,3,2
-ID498150431,23:44:06.437058,IBWin (EVS),Vinil PV,,,,,3,2
-ID122346226,4:57:06.425500,IBWin (EVS),Vinil PV,,,,,3,3
-ID101201993,None,India Support,Vinil PV,Sunil Kumar,1:13:18.130154,,1:13:07.030321,6,9
-ID905850643,None,India Support,Vinil PV,Harish R,9:29:18.130154,1:57:00,,3,3
-ID111496214,None,India Support,Vinil PV,Vasanth Elangovan,"5 days, 4:14:18.130154",,"5 days, 4:14:10.770554",16,8
-RP595492620,None,Indiasupport SPAM,Vinil PV,,,,,1,1
-RP512845291,"6 days, 22:05:11.234524",RemotePC Codec,Vinil PV,,,,,19,20
-ID502762666,22:18:12.200594,IBWin (EVS),Vinil PV,,,,,82,93
-ID910090796,None,India Support,Vinil PV,,,,,3,0
-RP652466379,"20 days, 1:46:11.900116",RemotePC Codec,Vinil PV,,,,,2,5
-ID383486676,None,India Support,Vinil PV,,,,,3,0
-ID197270449,None,India Support,Vinil PV,,,,,5,2
-ID796571269,"90 days, 14:46:14.679524",IBWin (EVS),Vinil PV,,,,,4,2
-ID184099607,None,India Support,Vinil PV,Rounak      K iran,"98 days, 11:04:18.130154",,"98 days, 11:04:15.622075",10,15
-RP485387522,None,India Support,Vinil PV,Jayaram Karanth,"112 days, 8:08:18.130154",,"112 days, 8:08:15.719247",9,14
-ID120028606,None,India Support,Vinil PV,Sunil Kumar,"99 days, 3:47:18.130154",,"99 days, 3:47:14.577511",15,21
-RP675130907,"112 days, 11:14:14.255441",RemotePC Codec,Vinil PV,,,,,1,1
-RP508809084,"112 days, 11:14:16.236118",RemotePC Codec,Vinil PV,,,,,2,3
-RP847541970,None,India Support,Vinil PV,Jayaram Karanth,"124 days, 4:35:18.130154",,"124 days, 4:35:16.626678",8,6
-RD610421098,"167 days, 7:01:17.118419",Remote Desktop Support,Vinil PV,,,,,6,2
-ID337176490,None,Design,Vinil PV,Yogendra Andraju,"358 days, 10:24:18.130154",,"358 days, 10:24:18.130154",7,7
+Ticket,Response to User,Ticket Due,Department,Assigned,Developer,Developer Update,Response to Dev,Response Pending to Dev Update,Notes,Events
+ID905850643,0:23:07.660910,None,India Support,Vinil PV,Harish R,"1 day, 5:30:24.673995",1:57:00,,3,3
+ID477192085,0:33:05.007866,None,India Support,Vinil PV,,,,,3,2
+ID626694569,4:06:02.527790,None,India Support,Vinil PV,,,,,2,0
+ID507958459,15:42:02.989725,None,Indiasupport Supervisors,Vinil PV,Kliment L,"7 days, 2:23:24.673995","6 days, 10:13:00",,5,7
+ID202241533,21:14:02.515771,None,India Support,Vinil PV,,,,,1,0
+ID482120336,22:03:04.088115,None,India Support,Vinil PV,,,,,2,0
+ID406685948,Updated,None,India Support,Vinil PV,,,,,2,0
+ID842008295,Updated,None,India Support,Vinil PV,,,,,1,0
+ID295961209,"1 day, 1:49:09.846574",None,India Support,Vinil PV,,,,,9,8
+ID200792408,"1 day, 2:37:07.819637",None,India Support,Vinil PV,Harish R,"1 day, 5:47:24.673995",2:14:00,,5,6
+RP540324762,"1 day, 2:45:07.634373",None,India Support,Vinil PV,,,,,2,0
+RP965087881,"1 day, 3:00:07.652910",None,India Support,Vinil PV,,,,,1,0
+ID950043043,"1 day, 3:01:11.329910",None,India Support,Vinil PV,,,,,2,2
+ID427990603,"1 day, 3:08:11.015243",None,India Support,Vinil PV,,,,,1,0
+RP659315298,Updated,None,India Support,Vinil PV,Karthik Kashyap,7:54:24.673995,,7:54:10.910684,3,2
+ID195314737,"1 day, 4:58:11.730658",16:33:11.730658,IBWin (EVS),Vinil PV,,,,,7,2
+ID377808007,"1 day, 17:41:12.295915",None,India Support,Vinil PV,Narasimha P,5:12:24.673995,,5:12:12.295915,7,8
+ID777981195,"1 day, 19:02:13.452317",None,India Support,Vinil PV,dhritikana kalita,5:47:24.673995,,5:47:13.452317,14,22
+RP606116185,Updated,None,India Support,Vinil PV,,,,,3,1
+ID498150431,Updated,"1 day, 19:45:13.170087",IBWin (EVS),Vinil PV,,,,,3,2
+ID122346226,Updated,"1 day, 0:58:13.588869",IBWin (EVS),Vinil PV,,,,,3,3
+ID101201993,"6 days, 21:58:14.304811",None,India Support,Vinil PV,Sunil Kumar,21:14:24.673995,,21:14:14.304811,6,9
+ID111496214,Updated,None,India Support,Vinil PV,Vasanth Elangovan,"6 days, 0:15:24.673995",,"6 days, 0:15:18.488988",16,8
+RP595492620,Updated,None,Indiasupport SPAM,Vinil PV,,,,,1,1
+RP512845291,"8 days, 18:50:16.392063","7 days, 18:06:16.392063",RemotePC Codec,Vinil PV,,,,,19,20
+ID502762666,"8 days, 20:21:20.783005",None,India Support,Vinil PV,Sunil Kumar,19:55:24.673995,,19:55:20.783005,83,94
+ID910090796,Updated,None,India Support,Vinil PV,,,,,3,0
+RP652466379,Updated,"20 days, 21:47:16.513519",RemotePC Codec,Vinil PV,,,,,2,5
+ID383486676,Updated,None,India Support,Vinil PV,,,,,3,0
+ID197270449,Updated,None,India Support,Vinil PV,,,,,5,2
+ID796571269,Updated,"91 days, 10:47:19.389463",IBWin (EVS),Vinil PV,,,,,4,2
+ID184099607,"105 days, 0:19:21.370845",None,India Support,Vinil PV,Rounak      K iran,"99 days, 7:05:24.673995",,"99 days, 7:05:21.370845",10,15
+RP485387522,Updated,None,India Support,Vinil PV,Jayaram Karanth,"113 days, 4:09:24.673995","3 days, 10:12:00",,9,14
+ID120028606,Updated,None,India Support,Vinil PV,Sunil Kumar,"99 days, 23:48:24.673995","1 day, 9:21:00",,15,21
+RP675130907,Updated,"113 days, 7:15:22.212150",RemotePC Codec,Vinil PV,,,,,1,1
+RP508809084,Updated,"113 days, 7:15:22.764917",RemotePC Codec,Vinil PV,,,,,2,3
+RP847541970,Updated,None,India Support,Vinil PV,Jayaram Karanth,"125 days, 0:36:24.673995","1 day, 5:55:00",,8,6
+RD610421098,Updated,"168 days, 3:02:23.624632",Remote Desktop Support,Vinil PV,,,,,6,2
+ID337176490,"488 days, 22:28:24.646482",None,Design,Vinil PV,Yogendra Andraju,"359 days, 6:25:24.673995",,"359 days, 6:25:24.646482",7,7

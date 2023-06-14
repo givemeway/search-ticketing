@@ -1,11 +1,2 @@
-Ticket,Due Since,Department,Assigned Agent,Developer,LastUpdated,HasAgentUpdated,Notes,Events
-ID299724708,None,US Support,Oskar Support,Shashi Arroju,"3 days, 19:53:27.930852",2:00:00,3,4
-RP528364990,"6 days, 23:14:08.900090",DavManager (Web),Sarthak HS,,,,11,12
-RP997268521,"4 days, 19:48:10.123349",DavManager (Web),akash waghamare,,,,7,11
-ID591148763,None,US Support,Oskar Support,Shashi Arroju,"3 days, 19:17:27.930852",2:50:00,4,3
-ID402923248,None,India Support,Santanu Chowdhury,Prateek Rangappag,"1 day, 6:07:27.930852",23:55:00,17,17
-ID594453660,"4 days, 22:07:20.818718",DavManager (Web),Arun Krishnan,,,,3,5
-ID742816617,None,US Support,Oskar Support,Shashi Arroju,"3 days, 19:37:27.930852",1:53:00,4,2
-ID928760485,"9 days, 20:25:21.481977",India Support,Sumit Sangwai,,,,8,8
-ID526095230,"5 days, 5:49:20.550695",DavManager (Web),Surekha Kulkarni,,,,4,3
-ID610990000,None,India Support,Ravi Chandra,Ajay Para,"4 days, 0:54:27.930852",23:53:00,4,2
+Ticket,Agent Response to User,Due Since,Department,Assigned Agent,Developer,Developer Update,Agent Response,Agent Response Pending,Notes,Events
+ID965767841,"221 days, 18:41:07.199707",None,India Support,Sandeep Kumar G R,Bala Murugan,"106 days, 20:57:12.885482","102 days, 8:08:00",,25,11
