@@ -1,5 +1,5 @@
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog,\
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, \
     QTableWidgetItem, QMessageBox, QLabel, QHeaderView
 from PyQt5.QtCore import QObject, pyqtSignal, QThread, pyqtSlot, QTimer
 from PyQt5.QtGui import QMovie, QIcon
@@ -436,7 +436,7 @@ class MainApp(QMainWindow):
                 self.ui.username_field.setText(row[0])
                 self.ui.password_field.setText(row[1])
                 self.login()
-        conn.close()
+            conn.close()
 
     def startAnimation(self, animation):
         animation.start()
