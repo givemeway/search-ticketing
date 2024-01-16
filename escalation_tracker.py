@@ -2,25 +2,32 @@ from bs4 import BeautifulSoup
 import bs4
 import math
 import csv
-from urllib.parse import urlparse, parse_qs
 from itertools import zip_longest
 from datetime import datetime
 from searchTicket import search_query
 from concurrent.futures import ThreadPoolExecutor
 from parse import error
 from copy import deepcopy
+import os
+import sys
+
 
 time = datetime.fromtimestamp
 
 n_workers = 5
 idx = 0
 
-csvFilePath = "./escalated.csv"
+csvFilePath = os.path.join(os.path.expanduser("~"), "Desktop", "escalated.csv")
+agent_csv_file_path = os.path.join(
+    os.path.expanduser("~"), "Desktop", "agents.csv")
 departmentURL = "https://ticket.idrive.com/scp/ajax.php/tickets/1319774/transfer"
 queryURL = 'https://ticket.idrive.com/scp/tickets.php?sort=date&dir=0&a=search&search-type=&query='
 
 columns = ["Ticket", "Response to User", "Ticket Due", "Department", "Assigned", "Developer",
            "Developer Update", "Response to Dev", "Response Pending to Dev Update", "Notes", "Events"]
+
+agent_tracker_cols = ["Ticket", "Thread_1",
+                      "Thread_2", "Thread_3", "Thread_4", "Thread_5"]
 
 exclude = ['India Billing Support', 'India Support', 'Indiasupport Supervisors', 'Indiasupport SPAM',
            'IndiaSupport Crisis', 'IDrive Support', 'IBackup Support', 'IndiaSupport Review',
@@ -29,6 +36,8 @@ exclude = ['India Billing Support', 'India Support', 'Indiasupport Supervisors',
            'Returns', 'Dev', 'Spam', 'Support', 'Artificial Intelligence', 'Design', 'Office IT', 'GDPR',
            '— Select —', 'Express', 'IndiaSupport 360'
            ]
+
+
 exclude = set(exclude)
 selector1 = ".thread-entry.note .header b"
 selector2 = ".thread-entry.note .header time"
@@ -40,6 +49,10 @@ selector3 = ".thread-event.action .faded.description:has(>b:first-child):has(>ti
 depart_head_selector = "div#content > :nth-child(3) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(3) >:nth-child(1)"
 depart_name_selector = "div#content > :nth-child(3) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(3) >:nth-child(2)"
 assigned_agent_selector = "div#content > :nth-child(5) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(2)"
+
+
+if sys.platform.startswith('win'):
+    desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
 
 
 def extract_ticket_url(soup, ticket):
@@ -313,6 +326,106 @@ def escalation_worker(_dict):
 
     df = create_dataframe_csv(processed)
     write_csv(csvFilePath, columns, df)
+
+
+def msg_res_eta(ticket, responses, messages):
+    time_diff_dict = {"ticket": ticket, "computed": True}
+    if messages:
+        for idx in range(5):
+            if messages:
+                if len(messages) > 0 and len(responses) > 0:
+                    msg = messages.pop()
+                    res = responses.pop()
+                    time_diff = res['timestamp'] - msg['timestamp']
+                    temp_main_diff = str(
+                        time(res['timestamp'])-time(msg['timestamp']))
+                    time_diff_dict["Thread_"+str(idx+1)] = "Received: " + msg['time'] + \
+                        " || " + "Replied: " + temp_main_diff
+                    if (time_diff > 3600):
+                        while len(responses) > 0:
+                            res = responses.pop()
+                            time_diff = res['timestamp'] - msg['timestamp']
+                            temp_diff = str(
+                                time(res['timestamp'])-time(msg['timestamp']))
+                            if time_diff > 3600:
+                                time_diff_dict["Thread_"+str(idx+1)] = "Received: " + \
+                                    msg['time'] + " || " + \
+                                    "Replied: " + temp_diff
+                                continue
+                            elif time_diff < 0:
+                                responses.append(res)
+                                break
+                            elif time_diff <= 3600:
+                                break
+                    elif time_diff < 0:
+                        responses.append(res)
+    return time_diff_dict
+
+
+def process_agent_ticket(ticket, visited, payload):
+    global idx
+    idx += 1
+    payload['processing'].emit((ticket, idx))
+    session = payload['session']
+    html_soup = get_ticket_html_content(session, ticket)
+    if html_soup is not None:
+        soup, assigned_depart, assigned_agent = html_soup
+        if (isinstance(soup, bs4.BeautifulSoup)):
+            responses = find_responses(soup, selector4, selector5)
+            messages = find_messages(soup, selector6, selector7)
+            deepcopy_res = deepcopy(responses)
+            res_mapped = msg_res_eta(
+                ticket, deepcopy_res, messages)
+            per = math.ceil((idx/payload['total'])*100)
+            payload["pBar"].emit(per)
+            return res_mapped
+        else:
+            return {"ticket": ticket, "computed": False}
+    else:
+        return {"ticket": ticket, "computed": False}
+
+
+def agent_tracker_worker(_dict):
+    global idx
+    processed = []
+    idx = 0
+    _dict['agents_in_department'] = extract_departments(
+        "./logs/departments.csv")
+    visited = {}
+    session = _dict['session']
+    _dict['departments'] = set(
+        get_agents_or_departments(session, departmentURL))
+
+    with ThreadPoolExecutor(n_workers) as exe:
+        futures = [exe.submit(process_agent_ticket, ticket, visited, _dict)
+                   for ticket in _dict['tickets']]
+        for future in futures:
+            due = future.result()
+            processed.append(due)
+    df = create_agent_dataframe_csv(processed)
+    write_csv(agent_csv_file_path, agent_tracker_cols, df)
+
+
+def create_agent_dataframe_csv(processed_tickets):
+    df = []
+    for row in processed_tickets:
+        if row['computed']:
+            df.append([row['ticket'],
+                       row["Thread_1"] if "Thread_1" in row else "",
+                       row["Thread_2"] if "Thread_2" in row else "",
+                       row["Thread_3"] if "Thread_3" in row else "",
+                       row["Thread_4"] if "Thread_4" in row else "",
+                       row["Thread_5"] if "Thread_5" in row else "",
+                       ])
+        else:
+            df.append([row['ticket'],
+                       "Compute Error",
+                       "Compute Error",
+                       "Compute Error",
+                       "Compute Error",
+                       "Compute Error",
+                       ])
+    return df
 
 
 def create_dataframe_csv(processed_tickets):

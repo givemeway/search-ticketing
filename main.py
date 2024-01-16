@@ -14,7 +14,7 @@ from findAndLoad import loadPrevious, search_ticket
 from new_ui_updated import Ui_TicketingSearchTool
 from login import *
 from searchTicket import ticketing, get_path
-from escalation_tracker import escalation_worker
+from escalation_tracker import escalation_worker, agent_tracker_worker
 # import webbrowser
 
 # implement
@@ -128,10 +128,11 @@ class EscalationWorker(QObject):
     warning = pyqtSignal(object)
     processing = pyqtSignal(tuple)
 
-    def __init__(self, tickets, session):
+    def __init__(self, tickets, session, tracker):
         super().__init__()
         self.tickets = tickets
         self.session = session
+        self.tracker = tracker
 
     def run(self):
         _dict = {'tickets': self.tickets,
@@ -140,9 +141,12 @@ class EscalationWorker(QObject):
                  'processing': self.processing,
                  'pBar': self.pBar,
                  'error': self.error,
-                 'total': len(self.tickets)
+                 'total': len(self.tickets),
                  }
-        escalation_worker(_dict)
+        if self.tracker == "AGENT":
+            agent_tracker_worker(_dict)
+        elif self.tracker == "ESCALATION":
+            escalation_worker(_dict)
         self.finished.emit()
 
 
@@ -318,6 +322,13 @@ class MainApp(QMainWindow):
                 error.exception(e)
 
     def escalationSearch(self):
+        tracker = None
+        if self.ui.agent_radioButton.isChecked():
+            tracker = "AGENT"
+        elif self.ui.escalation_radioButton.isChecked():
+            tracker = "ESCALATION"
+        else:
+            return
         self.time = 0
         self.timer = QTimer()
         self.timer.start(1000)
@@ -329,7 +340,8 @@ class MainApp(QMainWindow):
         self.ui.escalation_groupLabel.setMovie(self.text_gif)
         self.startAnimation(self.text_gif)
 
-        self.escalationworker = EscalationWorker(self.tickets, self.session)
+        self.escalationworker = EscalationWorker(
+            self.tickets, self.session, tracker)
         self.escalationThread = QThread()
         self.escalationworker.moveToThread(self.escalationThread)
         self.escalationThread.started.connect(self.escalationworker.run)
@@ -337,7 +349,7 @@ class MainApp(QMainWindow):
         self.escalationworker.finished.connect(
             self.escalationworker.deleteLater)
         self.escalationworker.finished.connect(lambda: self.showDialog(
-            "Escalation Tracker", QMessageBox.Information, "Escalation Tracker Complete!"))
+            "Escalation Tracker", QMessageBox.Information, "Escalation Tracker Complete!" if tracker == "ESCALATION" else "Agent Tracker Complete!"))
         self.escalationworker.finished.connect(
             lambda: self.ui.tracker_pushButton.setEnabled(True))
         self.escalationworker.finished.connect(
