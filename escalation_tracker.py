@@ -60,7 +60,7 @@ def extract_ticket_url(soup, ticket):
     for tr in soup.select(".list tbody tr"):
         for td in tr.select("td:nth-child(2)"):
             if (td.get_text().strip() == ticket):
-                url = "https://ticket.idrive.com/scp/" + \
+                url = "https://ticket.idrive.com" + \
                     td.find_all("a")[0]['href']
                 break
     return url
@@ -72,8 +72,8 @@ def find_responses(soup, selector1, selector2):
         #         print(b.get_text().strip(),time.get_text().strip())
         responses.append({"agent": b.get_text().strip(),
                           "time": time.get_text().strip(),
-                          "timestamp": datetime.strptime(time.get_text().strip(),
-                                                         '%m/%d/%y, %I:%M %p').timestamp()
+                          "timestamp": datetime.strptime(time.get_text().strip().replace("\u202f", " "),
+                                                         '%m/%d/%y %I:%M %p').timestamp()
                           })
     return responses
 
@@ -84,8 +84,8 @@ def find_messages(soup, selector1, selector2):
         #         print(b.get_text().strip(),time.get_text().strip())
         messages.append({"agent": b.get_text().strip(),
                          "time": time.get_text().strip(),
-                         "timestamp": datetime.strptime(time.get_text().strip(),
-                                                        '%m/%d/%y, %I:%M %p').timestamp()
+                         "timestamp": datetime.strptime(time.get_text().strip().replace("\u202f", " "),
+                                                        '%m/%d/%y %I:%M %p').timestamp()
                          })
     return messages
 
@@ -100,8 +100,8 @@ def find_notes(soup, selector1, selector2):
         #         print(b.get_text().strip(),time.get_text().strip())
         notes.append({"agent": b.get_text().strip(),
                       "time": time.get_text().strip(),
-                      "timestamp": datetime.strptime(time.get_text().strip(),
-                                                     '%m/%d/%y, %I:%M %p').timestamp()
+                      "timestamp": datetime.strptime(time.get_text().strip().replace("\u202f", " "),
+                                                     '%m/%d/%y %I:%M %p').timestamp()
                       })
     return notes
 
@@ -113,15 +113,15 @@ def find_ticket_events(soup, selector):
             item = {"agent":   strong.select("b")[0].get_text().strip(),
                     "department":   strong.select("strong")[0].get_text().strip(),
                     "time":   strong.select("time")[0].get_text().strip(),
-                    "timestamp":   datetime.strptime(strong.select("time")[0].get_text().strip(),
-                                                     '%m/%d/%y, %I:%M %p').timestamp()
+                    "timestamp":   datetime.strptime(strong.select("time")[0].get_text().strip().replace("\u202f", " "),
+                                                     '%m/%d/%y %I:%M %p').timestamp()
                     }
             events.append(item)
     return events
 
 
 def get_agents_or_departments(session, url):
-    ticket = search_query(session, url)
+    ticket = search_query(session, ticketURL=url)
     soup = BeautifulSoup(ticket.content, 'html5lib')
     dropdownitems = []
     for select in soup.select(".form-simple select"):
@@ -239,7 +239,8 @@ def get_ticket_html_content(session, ticket):
         ticketSearch = search_query(session, searchQuery=ticket)
         searchSoup = BeautifulSoup(ticketSearch.content, 'html5lib')
         ticketURL = extract_ticket_url(searchSoup, ticket)
-        ticketContent = search_query(session, ticketURL)
+
+        ticketContent = search_query(session, ticketURL=ticketURL)
         soup = BeautifulSoup(ticketContent.content, 'html5lib')
         assigned_department = soup.select(depart_name_selector)[
             0].get_text().split("Support /")[-1].strip()

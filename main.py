@@ -15,6 +15,7 @@ from new_ui_updated import Ui_TicketingSearchTool
 from login import *
 from searchTicket import ticketing, get_path
 from escalation_tracker import escalation_worker, agent_tracker_worker
+from copy import deepcopy
 # import webbrowser
 
 # implement
@@ -154,15 +155,19 @@ class SearchWorker(QObject):
     finished = pyqtSignal()
     pBar = pyqtSignal(int)
     error = pyqtSignal(tuple)
+    sessionError = pyqtSignal(bool)
+    expiredAt = pyqtSignal(object)
     warning = pyqtSignal(bool)
     processing = pyqtSignal(tuple)
     email_not_found = pyqtSignal(list)
     subject_not_found = pyqtSignal(list)
 
-    def __init__(self, emails, session):
+    def __init__(self, emails, session, startFrom, sessionExpired=False):
         super().__init__()
         self.emails = emails
         self._sess = session
+        self.startFrom = startFrom
+        self.sessionExpired = sessionExpired
 
     def run(self):
         _dict = {'emails': self.emails,
@@ -173,8 +178,10 @@ class SearchWorker(QObject):
                  'emailNotFound': self.email_not_found,
                  'subjectNotFound': self.subject_not_found,
                  'error': self.error,
-                 'emailCount': len(self.emails)
-                 }
+                 'emailCount': len(self.emails),
+                 'sessionError': self.sessionError,
+                 'expiredAt': self.expiredAt,
+                 'startFrom': self.startFrom, }
         ticketing(_dict)
         self.finished.emit()
 
@@ -233,7 +240,7 @@ class MainApp(QMainWindow):
         self.ui.tracker_pushButton.clicked.connect(self.escalationSearch)
 
         # ============================================================ #
-
+        self.isSessionExpired = False
         self.auto_login()
         self.comboIndex = None
         self.font = QtGui.QFont()
@@ -245,6 +252,13 @@ class MainApp(QMainWindow):
         self.isSearch = False
         # set inital mbox or eml path
         self.EmlMBoxPath = None
+        self.startFrom = {"idx": 0, "email_idx": 0,
+                          "subject_idx": 0, "err_idx": 0}
+        self.failedAt = {"idx": 0, "email_idx": 0,
+                         "subject_idx": 0, "err_idx": 0}
+        self.expiredAtCount = 0
+        self.username = None
+        self.password = None
         # setup context menu in Table
         # https://stackoverflow.com/questions/50768366/installeventfilter-in-pyqt5
         # https://stackoverflow.com/questions/65371143/create-a-context-menu-with-pyqt5/65371906#65371906
@@ -445,8 +459,12 @@ class MainApp(QMainWindow):
             row = cur.fetchone()
 
             if row is not None:
-                self.ui.username_field.setText(row[0])
-                self.ui.password_field.setText(row[1])
+                if not self.isSessionExpired:
+                    self.ui.username_field.setText(row[0])
+                    self.ui.password_field.setText(row[1])
+                else:
+                    self.username = row[0]
+                    self.password = row[1]
                 self.login()
             conn.close()
 
@@ -469,12 +487,18 @@ class MainApp(QMainWindow):
                                                "color: rgb(240, 240, 240);")
 
     def login(self):
-        username = self.ui.username_field.text()
-        password = self.ui.password_field.text()
-        self.login_gif = QMovie(get_path("gifs/294-1.gif"))
-        self.ui.loading.setMovie(self.login_gif)
-        self.startAnimation(self.login_gif)
-        self.setbtngrey(self.ui.btn_login)
+        username = ""
+        password = ""
+        if not self.isSessionExpired:
+            username = self.ui.username_field.text()
+            password = self.ui.password_field.text()
+            self.login_gif = QMovie(get_path("gifs/294-1.gif"))
+            self.ui.loading.setMovie(self.login_gif)
+            self.startAnimation(self.login_gif)
+            self.setbtngrey(self.ui.btn_login)
+        else:
+            username = self.username
+            password = self.password
         self.loginthread = QThread()
         self.loginworker = LoginWorker(username, password)
         self.loginworker.moveToThread(self.loginthread)
@@ -494,10 +518,13 @@ class MainApp(QMainWindow):
     @pyqtSlot(int)
     def loginProgress(self, status):
         if status == 200:
-            self.stopAnimation(self.login_gif)
-            self.ui.stackedWidget.setCurrentWidget(self.ui.parser_page)
-            self.disableTabs(False)
-            self.ParserPage()
+            if not self.isSessionExpired:
+                self.stopAnimation(self.login_gif)
+                self.ui.stackedWidget.setCurrentWidget(self.ui.parser_page)
+                self.disableTabs(False)
+                self.ParserPage()
+            else:
+                self.startSearch()
         elif status == 403:
             self.stopAnimation(self.login_gif)
             self.setbtndefault(self.ui.btn_login)
@@ -623,11 +650,6 @@ class MainApp(QMainWindow):
         else:
             table.setColumnWidth(2, 300)
         table.horizontalHeader().setStretchLastSection(True)
-        # self.ui.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-
-    # def OpenLink(self,url):
-    #         print(url.text())
-    #         webbrowser.open("https://ticket.idrive.com/scp/tickets.php?status=assigned")
 
     def searchUnderway(self):
         if self.isSearch:
@@ -784,24 +806,31 @@ class MainApp(QMainWindow):
 
     def startSearch(self):
         self.isSearch = True
-        self.time = 0
-        self.timer = QTimer()
-        self.timer.start(1000)
-        self.timer.timeout.connect(self.Counter)
-        self.text_gif = QMovie(get_path('gifs/text_fading.gif'))
-        self.ui.label_9.setMovie(self.text_gif)
-        self.startAnimation(self.text_gif)
-        self.ui.groupBox_2.setHidden(False)
-        self.ui.groupBox.setHidden(True)
-        self.ui.tabWidget.setHidden(False)
-        self.ui.groupBox_9.setHidden(True)
-        self.ui.btn_parse_clear.setEnabled(False)
-        self.ConfigureTable(self.ui.tableWidget_2, self.cols)
-        self.ConfigureTable(self.ui.tableWidget_3,
-                            self.cols_sub_table, colCount=5, matchCol=True)
-        self.ConfigureTable(self.ui.tableWidget_7, self.cols)
+        if not self.isSessionExpired:
+            self.time = 0
+            self.timer = QTimer()
+            self.timer.start(1000)
+            self.timer.timeout.connect(self.Counter)
+            self.text_gif = QMovie(get_path('gifs/text_fading.gif'))
+            self.ui.label_9.setMovie(self.text_gif)
+            self.startAnimation(self.text_gif)
+            self.ui.groupBox_2.setHidden(False)
+            self.ui.groupBox.setHidden(True)
+            self.ui.tabWidget.setHidden(False)
+            self.ui.groupBox_9.setHidden(True)
+            self.ui.btn_parse_clear.setEnabled(False)
+            self.ConfigureTable(self.ui.tableWidget_2, self.cols)
+            self.ConfigureTable(self.ui.tableWidget_3,
+                                self.cols_sub_table, colCount=5, matchCol=True)
+            self.ConfigureTable(self.ui.tableWidget_7, self.cols)
+
         self.searchthread = QThread()
-        self.searchworker = SearchWorker(self.emails, self.session)
+        self.searchworker = SearchWorker(
+            self.emails, self.session, self.startFrom)
+        if self.isSessionExpired:
+            self.isSessionExpired = False
+            self.expiredAtCount = 0
+
         self.searchworker.moveToThread(self.searchthread)
         self.searchthread.started.connect(self.searchworker.run)
         self.searchworker.pBar.connect(self.UpdateSearchPBar)
@@ -811,20 +840,87 @@ class MainApp(QMainWindow):
         self.searchworker.subject_not_found.connect(
             self.updateSubjectNotFoundTable)
         self.searchworker.error.connect(self.searchError)
+        self.searchworker.sessionError.connect(self.sessionExpired)
+        self.searchworker.expiredAt.connect(self.setStartFrom)
         self.searchworker.warning.connect(self.Warning)
         self.searchworker.finished.connect(self.searchthread.quit)
         self.searchworker.finished.connect(self.searchworker.deleteLater)
-        self.searchworker.finished.connect(self.stopTimer)
-        self.searchworker.finished.connect(
-            lambda: self.ui.btn_parse_clear.setEnabled(True))
-        self.searchworker.finished.connect(
-            lambda: self.stopAnimation(self.text_gif))
-        self.searchworker.finished.connect(lambda: self.displaymsg(
-            self.ui.label_9, text="Search Complete!", style="color: rgb(0, 98, 163);"))
-        self.searchworker.finished.connect(lambda: self.showDialog(
-            "Search Job", QMessageBox.Information, "Search Complete!"))
+        # self.searchworker.finished.connect(self.stopTimer)
+        # self.searchworker.finished.connect(
+        #     lambda: self.ui.btn_parse_clear.setEnabled(True))
+        # self.searchworker.finished.connect(
+        #     lambda: self.stopAnimation(self.text_gif))
+        # self.searchworker.finished.connect(lambda: self.displaymsg(
+        #     self.ui.label_9, text="Search Complete!", style="color: rgb(0, 98, 163);"))
+        # self.searchworker.finished.connect(lambda: self.showDialog(
+        #     "Search Job", QMessageBox.Information, "Search Complete!"))
+        self.searchworker.finished.connect(self.searchComplete)
         self.searchthread.finished.connect(self.searchthread.deleteLater)
         self.searchthread.start()
+
+    @pyqtSlot()
+    def searchComplete(self):
+        if not self.isSessionExpired:
+            self.displaymsg(
+                self.ui.label_9, text="Search Complete!", style="color: rgb(0, 98, 163);")
+            self.showDialog(
+                "Search Job", QMessageBox.Information, "Search Complete!")
+            self.stopAnimation(self.text_gif)
+            self.ui.btn_parse_clear.setEnabled(True)
+            self.stopTimer()
+        else:
+            self.auto_login()
+
+    @pyqtSlot(object)
+    def setStartFrom(self, expiredAt):
+        self.expiredAtCount += 1
+        if self.expiredAtCount > 1:
+            _dict = {"idx": 0, "email_idx": 0,
+                     "subject_idx": 0, "err_idx": 0}
+            for key, value in self.failedAt.items():
+                if (key == "idx" and self.failedAt[key] > 0 and expiredAt[key] <= self.failedAt[key]):
+                    if value > 0:
+                        _dict[key] = expiredAt[key] - 1
+                    else:
+                        _dict[key] = expiredAt[key]
+                elif (key == "idx" and self.failedAt[key] > 0 and expiredAt[key] >= self.failedAt[key]):
+                    _dict[key] = self.failedAt[key] - 1
+                elif (key == "idx" and self.failedAt[key] == 0):
+                    if value > 0:
+                        _dict[key] = expiredAt[key] - 1
+                    else:
+                        _dict[key] = expiredAt[key]
+                elif (key == "email_idx" and self.failedAt[key] > 0 and expiredAt[key] <= self.failedAt[key]):
+                    _dict[key] = self.failedAt[key]
+                elif (key == "email_idx" and self.failedAt[key] > 0 and expiredAt[key] >= self.failedAt[key]):
+                    _dict[key] = expiredAt[key]
+                elif (key == "email_idx" and self.failedAt[key] == 0):
+                    _dict[key] = expiredAt[key]
+                elif (key == "subject_idx" and self.failedAt[key] > 0 and expiredAt[key] <= self.failedAt[key]):
+                    _dict[key] = self.failedAt[key]
+                elif (key == "subject_idx" and self.failedAt[key] > 0 and expiredAt[key] >= self.failedAt[key]):
+                    _dict[key] = expiredAt[key]
+                elif (key == "subject_idx" and self.failedAt[key] == 0):
+                    _dict[key] = expiredAt[key]
+                elif (key == "err_idx" and self.failedAt[key] > 0 and expiredAt[key] <= self.failedAt[key]):
+                    _dict[key] = self.failedAt[key]
+                elif (key == "err_idx" and self.failedAt[key] > 0 and expiredAt[key] >= self.failedAt[key]):
+                    _dict[key] = expiredAt[key]
+                elif (key == "err_idx" and self.failedAt[key] == 0):
+                    _dict[key] = expiredAt[key]
+
+            self.startFrom = deepcopy(_dict)
+            self.failedAt = deepcopy(_dict)
+        else:
+            if expiredAt["idx"] > 0:
+                expiredAt["idx"] = expiredAt["idx"] - 1
+            self.startFrom = deepcopy(expiredAt)
+            self.failedAt = deepcopy(expiredAt)
+
+    @pyqtSlot(bool)
+    def sessionExpired(self, expired):
+        if expired:
+            self.isSessionExpired = True
 
     @pyqtSlot(bool)
     def Warning(self, abnormal):
@@ -834,7 +930,6 @@ class MainApp(QMainWindow):
 
     @pyqtSlot(tuple)
     def SearchProcessing(self, ticket):
-        # print(f'Processing : {ticket}',end="\r")
         self.ui.label_5.setText(f"Processing     : {ticket[0]} ")
         self.ui.label_6.setText(
             f"Processed      : [ {ticket[1]} of {len(self.emails)} ]")
@@ -843,18 +938,15 @@ class MainApp(QMainWindow):
 
     @pyqtSlot(list)
     def updateEmailNotFoundTable(self, ticket):
-        # print(f"Email Not found: {ticket[1]}")
         self.updateTable(self.ui.tableWidget_2, ticket, searching=True)
 
     @pyqtSlot(list)
     def updateSubjectNotFoundTable(self, ticket):
-        # print(f'Subject Not Found: {ticket[1]}')
         self.updateTable(self.ui.tableWidget_3, ticket,
                          searching=True, subject=True)
 
     @pyqtSlot(int)
     def UpdateSearchPBar(self, n):
-        # print(f"Progressed : {n}%",end="\r")
         self.ui.label_11.setText(f"Search Underway {n}%")
         self.ui.progressBar_2.setValue(n)
 

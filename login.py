@@ -96,7 +96,7 @@ def create_subjectNotFound_table(conn):
     conn.execute('PRAGMA journal_mode = WAL;')
 
 
-def ticket_session(name, secret, _session):
+def ticket_session(name, secret, _session, isExpired=False):
     global headers
     with requests.Session() as s:
         url = "https://ticket.idrive.com/scp/login.php"
@@ -105,7 +105,7 @@ def ticket_session(name, secret, _session):
             if r.status_code == 403:
                 return 403  # unauthorized
             else:
-                return build_header(r, s, url, name, secret, _session)
+                return build_header(r, s, url, name, secret, _session, isExpired)
         except requests.exceptions.HTTPError as errh:
             return (request_errors[0], errh)
         except requests.exceptions.ConnectionError as errc:
@@ -116,7 +116,7 @@ def ticket_session(name, secret, _session):
             return (request_errors[3], err)
 
 
-def build_header(r, s, url, username, password, _session):
+def build_header(r, s, url, username, password, _session, isExpired):
     global login_data
     try:
         soup = BeautifulSoup(r.content, 'html5lib')
@@ -125,45 +125,62 @@ def build_header(r, s, url, username, password, _session):
         login_data['userid'] = username
         login_data['passwd'] = password
         r = s.post(url, data=login_data, headers=headers)
-        if r.status_code == 200:
-            conn = create_connection('ticket.db')
-            create_login_table(conn)
-            create_email_table(conn)
-            create_emailNotFound_table(conn)
-            create_subjectNotFound_table(conn)
-            create_error_table(conn)
-            create_mbox_table(conn)
-            with conn:
-                if conn is not None:
+        loginPageSoup = BeautifulSoup(r.content, 'html5lib')
+        loginMsg = loginPageSoup.find(id="login-message")
+        if loginMsg is not None and len(loginMsg) > 0:
+            loginMsg = loginMsg.getText().strip()
+            if loginMsg == "Invalid login" or loginMsg == "Access denied":
+                print("login failed")
+                query = '''DELETE FROM login WHERE rowid=1'''
+                conn = create_connection('ticket.db')
+                with conn:
                     cur = conn.cursor()
-                    cur.execute("SELECT * FROM login")
-                    row = cur.fetchone()
-                    if row is None:
-                        cur.execute('''INSERT INTO login(USERNAME,PASSWORD) 
-                                                VALUES(?,?)''', (username, password))
-                        cur.connection.commit()
-                    cur.execute("SELECT * FROM mbox")
-                    rows = cur.fetchall()
-                    if rows is not None:
-                        query = '''DELETE FROM mbox WHERE rowid=?'''
-                        for row in rows:
-                            if row[5] is None:
-                                val = (row[0],)
-                                cur.execute(query, val)
-                        cur.connection.commit()
-            _session.emit(s)
-            return 200  # login success
+                    cur.execute(query)
+                return 422  # login failed
         else:
+            if r.status_code == 200:
+                conn = create_connection('ticket.db')
+                create_login_table(conn)
+                create_email_table(conn)
+                create_emailNotFound_table(conn)
+                create_subjectNotFound_table(conn)
+                create_error_table(conn)
+                create_mbox_table(conn)
+                with conn:
+                    if conn is not None:
+                        cur = conn.cursor()
+                        cur.execute("SELECT * FROM login")
+                        row = cur.fetchone()
+                        if row is None:
+                            cur.execute('''INSERT INTO login(USERNAME,PASSWORD) 
+                                                    VALUES(?,?)''', (username, password))
+                            cur.connection.commit()
+                        cur.execute("SELECT * FROM mbox")
+                        rows = cur.fetchall()
+                        if rows is not None:
+                            query = '''DELETE FROM mbox WHERE rowid=?'''
+                            for row in rows:
+                                if row[5] is None:
+                                    val = (row[0],)
+                                    cur.execute(query, val)
+                            cur.connection.commit()
+                if not isExpired:
+                    _session.emit(s)
+                else:
+                    _session = s
+                return 200  # login success
+            else:
 
-            query = '''DELETE FROM login WHERE rowid=1'''
-            conn = create_connection('ticket.db')
-            with conn:
-                cur = conn.cursor()
-                cur.execute(query)
-            return 422  # login failed
+                query = '''DELETE FROM login WHERE rowid=1'''
+                conn = create_connection('ticket.db')
+                with conn:
+                    cur = conn.cursor()
+                    cur.execute(query)
+                return 422  # login failed
 
     except Exception as e:
         # er.exception(f'DB Exception-2: {e}')
+        print(e)
         return ('DB Exception-2', e)
 
 
