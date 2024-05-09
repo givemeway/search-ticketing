@@ -14,6 +14,7 @@
    <font>
     <family>Verdana</family>
     <pointsize>12</pointsize>
+    <weight>75</weight>
     <bold>true</bold>
    </font>
   </property>
@@ -340,6 +341,7 @@ QPushButton:hover
                 <property name="font">
                  <font>
                   <family>Verdana</family>
+                  <weight>75</weight>
                   <bold>true</bold>
                  </font>
                 </property>
@@ -374,6 +376,7 @@ QPushButton:hover
                     <font>
                      <family>Verdana</family>
                      <pointsize>8</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -495,6 +498,7 @@ QPushButton:pressed
                 <font>
                  <family>Verdana</family>
                  <pointsize>8</pointsize>
+                 <weight>75</weight>
                  <bold>true</bold>
                 </font>
                </property>
@@ -548,6 +552,7 @@ QPushButton:pressed
                     <font>
                      <family>Verdana</family>
                      <pointsize>14</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -679,6 +684,7 @@ QPushButton:pressed
                        <font>
                         <family>Verdana</family>
                         <pointsize>8</pointsize>
+                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -725,6 +731,7 @@ color: rgb(240, 240, 240);</string>
                        <font>
                         <family>Verdana</family>
                         <pointsize>8</pointsize>
+                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -990,6 +997,7 @@ QPushButton:pressed
                        <font>
                         <family>Verdana</family>
                         <pointsize>8</pointsize>
+                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -1084,6 +1092,7 @@ color: rgb(240, 240, 240);</string>
                        <font>
                         <family>Verdana</family>
                         <pointsize>14</pointsize>
+                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -1238,7 +1247,7 @@ color: rgb(240, 240, 240);</string>
                     <enum>Qt::NoContextMenu</enum>
                    </property>
                    <property name="currentIndex">
-                    <number>2</number>
+                    <number>0</number>
                    </property>
                    <widget class="QWidget" name="tab">
                     <property name="toolTip">
@@ -1428,6 +1437,7 @@ color: rgb(240, 240, 240);</string>
                        <font>
                         <family>Verdana</family>
                         <pointsize>12</pointsize>
+                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -1451,6 +1461,7 @@ color: rgb(240, 240, 240);</string>
                        <font>
                         <family>Verdana</family>
                         <pointsize>10</pointsize>
+                        <weight>75</weight>
                         <bold>true</bold>
                        </font>
                       </property>
@@ -1525,6 +1536,7 @@ color: rgb(240, 240, 240);</string>
                              <font>
                               <family>Verdana</family>
                               <pointsize>10</pointsize>
+                              <weight>75</weight>
                               <bold>true</bold>
                              </font>
                             </property>
@@ -1615,6 +1627,7 @@ color:#F0F0F0;</string>
                              <font>
                               <family>Verdana</family>
                               <pointsize>10</pointsize>
+                              <weight>75</weight>
                               <bold>true</bold>
                              </font>
                             </property>
@@ -1740,6 +1753,7 @@ color:#F0F0F0;</string>
                              <font>
                               <family>Verdana</family>
                               <pointsize>12</pointsize>
+                              <weight>75</weight>
                               <bold>true</bold>
                              </font>
                             </property>
@@ -1766,6 +1780,7 @@ color:#F0F0F0;</string>
                           <font>
                            <family>Verdana</family>
                            <pointsize>10</pointsize>
+                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -1797,6 +1812,7 @@ color:#F0F0F0;</string>
                              <font>
                               <family>Verdana</family>
                               <pointsize>10</pointsize>
+                              <weight>75</weight>
                               <bold>true</bold>
                              </font>
                             </property>
@@ -1875,6 +1891,7 @@ QPushButton:pressed
                              <font>
                               <family>Verdana</family>
                               <pointsize>10</pointsize>
+                              <weight>50</weight>
                               <bold>false</bold>
                              </font>
                             </property>
@@ -1901,6 +1918,7 @@ QPushButton:pressed
                              <font>
                               <family>Verdana</family>
                               <pointsize>10</pointsize>
+                              <weight>75</weight>
                               <bold>true</bold>
                              </font>
                             </property>
@@ -2253,6 +2271,7 @@ color:#F0F0F0;</string>
                           <font>
                            <family>Verdana</family>
                            <pointsize>8</pointsize>
+                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -2347,6 +2366,7 @@ color: rgb(240, 240, 240);</string>
                           <font>
                            <family>Verdana</family>
                            <pointsize>14</pointsize>
+                           <weight>75</weight>
                            <bold>true</bold>
                           </font>
                          </property>
@@ -2514,24 +2534,6 @@ color: rgb(240, 240, 240);</string>
                  <enum>Qt::LeftToRight</enum>
                 </property>
                 <layout class="QGridLayout" name="gridLayout">
-                 <property name="sizeConstraint">
-                  <enum>QLayout::SetDefaultConstraint</enum>
-                 </property>
-                 <property name="leftMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="topMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="rightMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="bottomMargin">
-                  <number>0</number>
-                 </property>
-                 <property name="spacing">
-                  <number>0</number>
-                 </property>
                  <item row="0" column="0">
                   <widget class="QFrame" name="login_frame">
                    <property name="minimumSize">
@@ -2550,6 +2552,7 @@ color: rgb(240, 240, 240);</string>
                     <font>
                      <family>Verdana</family>
                      <pointsize>10</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -2596,6 +2599,7 @@ color: rgb(240, 240, 240);</string>
                        <font>
                         <family>Verdana</family>
                         <pointsize>10</pointsize>
+                        <weight>75</weight>
                         <italic>false</italic>
                         <bold>true</bold>
                        </font>
@@ -2626,6 +2630,7 @@ color: rgb(240, 240, 240);</string>
                        <font>
                         <family>Verdana</family>
                         <pointsize>10</pointsize>
+                        <weight>50</weight>
                         <bold>false</bold>
                        </font>
                       </property>
@@ -2661,6 +2666,7 @@ color: rgb(240, 240, 240);</string>
                        <font>
                         <family>Verdana</family>
                         <pointsize>10</pointsize>
+                        <weight>75</weight>
                         <italic>false</italic>
                         <bold>true</bold>
                        </font>
@@ -2694,6 +2700,7 @@ color: rgb(240, 240, 240);</string>
                        <font>
                         <family>Verdana</family>
                         <pointsize>10</pointsize>
+                        <weight>50</weight>
                         <bold>false</bold>
                        </font>
                       </property>
@@ -2732,6 +2739,7 @@ color: rgb(240, 240, 240);</string>
                        <font>
                         <family>Verdana</family>
                         <pointsize>10</pointsize>
+                        <weight>75</weight>
                         <italic>false</italic>
                         <bold>true</bold>
                        </font>
@@ -2803,6 +2811,214 @@ color: rgb(250, 250, 250);</string>
                        <font>
                         <family>Verdana</family>
                         <pointsize>10</pointsize>
+                        <weight>75</weight>
+                        <italic>false</italic>
+                        <bold>true</bold>
+                       </font>
+                      </property>
+                      <property name="frameShadow">
+                       <enum>QFrame::Raised</enum>
+                      </property>
+                      <property name="lineWidth">
+                       <number>1</number>
+                      </property>
+                      <property name="text">
+                       <string>Loading...</string>
+                      </property>
+                      <property name="textFormat">
+                       <enum>Qt::RichText</enum>
+                      </property>
+                      <property name="alignment">
+                       <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
+                      </property>
+                      <property name="wordWrap">
+                       <bool>true</bool>
+                      </property>
+                      <property name="indent">
+                       <number>0</number>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QGroupBox" name="twofactor">
+                   <property name="minimumSize">
+                    <size>
+                     <width>250</width>
+                     <height>150</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>250</width>
+                     <height>150</height>
+                    </size>
+                   </property>
+                   <property name="title">
+                    <string/>
+                   </property>
+                   <layout class="QVBoxLayout" name="verticalLayout_17">
+                    <property name="spacing">
+                     <number>0</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="QLabel" name="label_3">
+                      <property name="text">
+                       <string>2FA Pending</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="label_12">
+                      <property name="text">
+                       <string>Verification Code: </string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="password_field_2">
+                      <property name="minimumSize">
+                       <size>
+                        <width>250</width>
+                        <height>30</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>250</width>
+                        <height>30</height>
+                       </size>
+                      </property>
+                      <property name="font">
+                       <font>
+                        <family>Verdana</family>
+                        <pointsize>10</pointsize>
+                        <weight>50</weight>
+                        <bold>false</bold>
+                       </font>
+                      </property>
+                      <property name="inputMethodHints">
+                       <set>Qt::ImhHiddenText|Qt::ImhNoAutoUppercase|Qt::ImhNoPredictiveText|Qt::ImhSensitiveData</set>
+                      </property>
+                      <property name="maxLength">
+                       <number>256</number>
+                      </property>
+                      <property name="echoMode">
+                       <enum>QLineEdit::Password</enum>
+                      </property>
+                      <property name="placeholderText">
+                       <string>Code</string>
+                      </property>
+                      <property name="clearButtonEnabled">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="btn_login_2">
+                      <property name="minimumSize">
+                       <size>
+                        <width>250</width>
+                        <height>30</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>250</width>
+                        <height>30</height>
+                       </size>
+                      </property>
+                      <property name="font">
+                       <font>
+                        <family>Verdana</family>
+                        <pointsize>10</pointsize>
+                        <weight>75</weight>
+                        <italic>false</italic>
+                        <bold>true</bold>
+                       </font>
+                      </property>
+                      <property name="cursor">
+                       <cursorShape>PointingHandCursor</cursorShape>
+                      </property>
+                      <property name="mouseTracking">
+                       <bool>true</bool>
+                      </property>
+                      <property name="toolTipDuration">
+                       <number>0</number>
+                      </property>
+                      <property name="layoutDirection">
+                       <enum>Qt::LeftToRight</enum>
+                      </property>
+                      <property name="autoFillBackground">
+                       <bool>false</bool>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">background-color: rgb(0, 98, 163);
+color: rgb(250, 250, 250);</string>
+                      </property>
+                      <property name="text">
+                       <string>Verify</string>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="new_gui_pyqt.qrc">
+                        <normaloff>:/icons/icons/database.png</normaloff>:/icons/icons/database.png</iconset>
+                      </property>
+                      <property name="iconSize">
+                       <size>
+                        <width>20</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                      <property name="shortcut">
+                       <string/>
+                      </property>
+                      <property name="checkable">
+                       <bool>true</bool>
+                      </property>
+                      <property name="checked">
+                       <bool>false</bool>
+                      </property>
+                      <property name="default">
+                       <bool>false</bool>
+                      </property>
+                      <property name="flat">
+                       <bool>false</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLabel" name="loading_2">
+                      <property name="minimumSize">
+                       <size>
+                        <width>250</width>
+                        <height>30</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>250</width>
+                        <height>30</height>
+                       </size>
+                      </property>
+                      <property name="font">
+                       <font>
+                        <family>Verdana</family>
+                        <pointsize>10</pointsize>
+                        <weight>75</weight>
                         <italic>false</italic>
                         <bold>true</bold>
                        </font>

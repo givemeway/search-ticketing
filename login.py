@@ -96,16 +96,50 @@ def create_subjectNotFound_table(conn):
     conn.execute('PRAGMA journal_mode = WAL;')
 
 
-def ticket_session(name, secret, _session, isExpired=False):
+def verify2FA(sessionData, _session):
+    global headers
+    s = sessionData['session']
+    del sessionData['session']
+    url = "https://ticket.idrive.com/scp/login.php"
+    try:
+        r = s.post(url, data=sessionData, headers=headers)
+        loginPageSoup = BeautifulSoup(r.content, 'html5lib')
+        if r.status_code == 403:
+            return (403, "Login Forbidden")  # unauthorized
+        status, msg = validateLogin(r, s)
+
+        if status == 200:
+            _session.emit(s)
+            return (200, "SUCCESS")
+        elif status == 401 and isinstance(msg, dict):
+            return (401, "Invalid Code")
+        elif status == 401 and isinstance(msg, str):
+            query = '''DELETE FROM login WHERE rowid=1'''
+            conn = create_connection('ticket.db')
+            with conn:
+                cur = conn.cursor()
+                cur.execute(query)
+            return (401, msg)
+    except requests.exceptions.HTTPError as errh:
+        return (request_errors[0], errh)
+    except requests.exceptions.ConnectionError as errc:
+        return (request_errors[1], errc)
+    except requests.exceptions.Timeout as errt:
+        return (request_errors[2], errt)
+    except requests.exceptions.RequestException as err:
+        return (request_errors[3], err)
+
+
+def ticket_session(name, secret, _session, _2fa, isExpired=False):
     global headers
     with requests.Session() as s:
         url = "https://ticket.idrive.com/scp/login.php"
         try:
             r = s.get(url, headers=headers)
             if r.status_code == 403:
-                return 403  # unauthorized
+                return (403, "Login Forbidden")  # unauthorized
             else:
-                return build_header(r, s, url, name, secret, _session, isExpired)
+                return build_header(r, s, url, name, secret, _session, _2fa)
         except requests.exceptions.HTTPError as errh:
             return (request_errors[0], errh)
         except requests.exceptions.ConnectionError as errc:
@@ -116,7 +150,95 @@ def ticket_session(name, secret, _session, isExpired=False):
             return (request_errors[3], err)
 
 
-def build_header(r, s, url, username, password, _session, isExpired):
+# __CSRFToken__: 8e5f3894030dd6faf627e8ec5769bb3a0dbb32e6
+# b97458938d61be: 406603
+# do: 2fa
+# ajax: 1
+
+
+# <input type="hidden" name="__CSRFToken__" value="5f6a94748bd0482250277f5454ac7f393a2cab34" /><div class="form-simple">
+#             <div class="flush-left custom-field" id="field_d1693da4947952" >
+#         <div>
+#           <div class="field-label required">
+#         <label for="d1693da4947952">
+#             Verification Code:
+#               <span class="error">*</span>
+#           </label>
+#         </div>
+
+#         __CSRFToken__: 5f6a94748bd0482250277f5454ac7f393a2cab34
+# d1693da4947952: 512044
+# do: 2fa
+# ajax: 1
+
+def validateLogin(r, session, username=None, password=None):
+    loginPageSoup = BeautifulSoup(r.content, 'html5lib')
+    loginMsg = loginPageSoup.find(id="login-message")
+    if loginMsg is not None and len(loginMsg) > 0:
+        loginMsg = loginMsg.getText().strip()
+        if loginMsg == "Invalid login" or loginMsg == "Authentication Required":
+            query = '''DELETE FROM login WHERE rowid=1'''
+            conn = create_connection('ticket.db')
+            with conn:
+                cur = conn.cursor()
+                cur.execute(query)
+            return (401, loginMsg)
+
+        elif loginMsg == "Access denied":
+            query = '''DELETE FROM login WHERE rowid=1'''
+            conn = create_connection('ticket.db')
+            with conn:
+                cur = conn.cursor()
+                cur.execute(query)
+            return (401, loginMsg)
+        elif loginMsg == "2FA Pending":
+            label_2fa = loginPageSoup.select(
+                "div.field-label.required")[0].find("label").get("for")
+            CSRF = loginPageSoup.find(
+                'input', attrs={'name': '__CSRFToken__'})['value']
+            login_data = {}
+            login_data['__CSRFToken__'] = CSRF
+            login_data[label_2fa] = ""
+            login_data['sessionID'] = label_2fa
+            login_data['do'] = "2fa"
+            login_data['session'] = session
+            updateDB(username, password)
+            return (401, login_data)
+        elif loginMsg == "Invalid Code":
+            return (401, loginMsg)
+    else:
+        return (200, 'Success')
+
+
+def updateDB(username, password):
+    conn = create_connection('ticket.db')
+    create_login_table(conn)
+    create_email_table(conn)
+    create_emailNotFound_table(conn)
+    create_subjectNotFound_table(conn)
+    create_error_table(conn)
+    create_mbox_table(conn)
+    with conn:
+        if conn is not None:
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM login")
+            row = cur.fetchone()
+            if row is None:
+                cur.execute('''INSERT INTO login(USERNAME,PASSWORD) 
+                                        VALUES(?,?)''', (username, password))
+                cur.connection.commit()
+            cur.execute("SELECT * FROM mbox")
+            rows = cur.fetchall()
+            if rows is not None:
+                query = '''DELETE FROM mbox WHERE rowid=?'''
+                for row in rows:
+                    if row[5] is None:
+                        val = (row[0],)
+                        cur.execute(query, val)
+                cur.connection.commit()
+
+
+def build_header(r, s, url, username, password, _session, _2fa):
     global login_data
     try:
         soup = BeautifulSoup(r.content, 'html5lib')
@@ -125,58 +247,22 @@ def build_header(r, s, url, username, password, _session, isExpired):
         login_data['userid'] = username
         login_data['passwd'] = password
         r = s.post(url, data=login_data, headers=headers)
-        loginPageSoup = BeautifulSoup(r.content, 'html5lib')
-        loginMsg = loginPageSoup.find(id="login-message")
-        if loginMsg is not None and len(loginMsg) > 0:
-            loginMsg = loginMsg.getText().strip()
-            if loginMsg == "Invalid login" or loginMsg == "Access denied":
-                print("login failed")
-                query = '''DELETE FROM login WHERE rowid=1'''
-                conn = create_connection('ticket.db')
-                with conn:
-                    cur = conn.cursor()
-                    cur.execute(query)
-                return 422  # login failed
-        else:
-            if r.status_code == 200:
-                conn = create_connection('ticket.db')
-                create_login_table(conn)
-                create_email_table(conn)
-                create_emailNotFound_table(conn)
-                create_subjectNotFound_table(conn)
-                create_error_table(conn)
-                create_mbox_table(conn)
-                with conn:
-                    if conn is not None:
-                        cur = conn.cursor()
-                        cur.execute("SELECT * FROM login")
-                        row = cur.fetchone()
-                        if row is None:
-                            cur.execute('''INSERT INTO login(USERNAME,PASSWORD) 
-                                                    VALUES(?,?)''', (username, password))
-                            cur.connection.commit()
-                        cur.execute("SELECT * FROM mbox")
-                        rows = cur.fetchall()
-                        if rows is not None:
-                            query = '''DELETE FROM mbox WHERE rowid=?'''
-                            for row in rows:
-                                if row[5] is None:
-                                    val = (row[0],)
-                                    cur.execute(query, val)
-                            cur.connection.commit()
-                if not isExpired:
-                    _session.emit(s)
-                else:
-                    _session = s
-                return 200  # login success
-            else:
+        status, data = validateLogin(r, s, username, password)
 
-                query = '''DELETE FROM login WHERE rowid=1'''
-                conn = create_connection('ticket.db')
-                with conn:
-                    cur = conn.cursor()
-                    cur.execute(query)
-                return 422  # login failed
+        if status == 200:
+            updateDB(username, password)
+            _session.emit(s)
+            return (200, "SUCCESS")
+        elif status == 401 and isinstance(data, dict):
+            _2fa.emit(data)
+            return (401, "2FA")
+        elif status == 401 and isinstance(data, str):
+            query = '''DELETE FROM login WHERE rowid=1'''
+            conn = create_connection('ticket.db')
+            with conn:
+                cur = conn.cursor()
+                cur.execute(query)
+            return (401, data)
 
     except Exception as e:
         # er.exception(f'DB Exception-2: {e}')

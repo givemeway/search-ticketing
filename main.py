@@ -1,6 +1,6 @@
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, \
-    QTableWidgetItem, QMessageBox, QLabel, QHeaderView
+    QTableWidgetItem, QMessageBox, QLabel, QHeaderView, QInputDialog
 from PyQt5.QtCore import QObject, pyqtSignal, QThread, pyqtSlot, QTimer
 from PyQt5.QtGui import QMovie, QIcon
 from PyQt5 import QtGui
@@ -11,7 +11,7 @@ from parse import error
 from math import ceil
 from parse import get_mbox, process_emls
 from findAndLoad import loadPrevious, search_ticket
-from new_ui_updated import Ui_TicketingSearchTool
+from new_ui_2fa import Ui_TicketingSearchTool
 from login import *
 from searchTicket import ticketing, get_path
 from escalation_tracker import escalation_worker, agent_tracker_worker
@@ -65,8 +65,10 @@ class QuerySearchWorker(QObject):
 class LoginWorker(QObject):
     finished = pyqtSignal()
     session = pyqtSignal(object)
-    result = pyqtSignal(int)
+    result = pyqtSignal(tuple)
     error = pyqtSignal(tuple)
+    _2fa_data = pyqtSignal(object)
+    _2fa_prompt = pyqtSignal(bool)
 
     def __init__(self, username, password):
         super().__init__()
@@ -75,15 +77,44 @@ class LoginWorker(QObject):
 
     def run(self):
         _session = self.session
-        status = ticket_session(self.username, self.password, _session)
+        _2fa_data = self._2fa_data
+
+        status, msg = ticket_session(
+            self.username, self.password, _session, _2fa_data)
         if status == 200:
-            self.result.emit(200)
+            self.result.emit((status, msg))
         elif status == 403:
-            self.result.emit(403)
-        elif status == 422:
-            self.result.emit(422)
+            self.result.emit((status, 'Login Forbidden'))
+        elif status == 401 and msg != "2FA":
+            self.result.emit((status, msg))
+        elif status == 401 and msg == "2FA":
+            self._2fa_prompt.emit(True)
         else:
-            self.error.emit(status)
+            self.error.emit((status, msg))
+        self.finished.emit()
+
+
+class TwoStepVerificationWorker(QObject):
+    finished = pyqtSignal()
+    session = pyqtSignal(object)
+    result = pyqtSignal(tuple)
+    error = pyqtSignal(tuple)
+
+    def __init__(self, sessionData):
+        super().__init__()
+        self.sessionData = sessionData
+
+    def run(self):
+        _session = self.session
+        status, msg = verify2FA(self.sessionData, _session)
+        if status == 200:
+            self.result.emit((status, msg))
+        elif status == 403:
+            self.result.emit((status, 'Login Forbidden'))
+        elif status == 401:
+            self.result.emit((status, msg))
+        else:
+            self.error.emit((status, msg))
         self.finished.emit()
 
 
@@ -232,6 +263,7 @@ class MainApp(QMainWindow):
         # auto login if the app is previously logged in
 
         self.ui.pushButton_7.clicked.connect(self.enableAutoSearch)
+        self.ui.btn_login_2.clicked.connect(self.verify2FA)
 
         # escalated tracker
         # ============================================================ #
@@ -259,6 +291,9 @@ class MainApp(QMainWindow):
         self.expiredAtCount = 0
         self.username = None
         self.password = None
+        self._2FA_loginData = {'__CSRFToken__': "",
+                               "do": "2fa", "sessioncode": ""}
+        self._2FA_prompt = False
         # setup context menu in Table
         # https://stackoverflow.com/questions/50768366/installeventfilter-in-pyqt5
         # https://stackoverflow.com/questions/65371143/create-a-context-menu-with-pyqt5/65371906#65371906
@@ -486,21 +521,22 @@ class MainApp(QMainWindow):
             self.ui.pushButton_7.setStyleSheet("background-color: rgb(0, 98, 163);\n"
                                                "color: rgb(240, 240, 240);")
 
-    def login(self):
-        username = ""
-        password = ""
-        if not self.isSessionExpired:
-            username = self.ui.username_field.text()
-            password = self.ui.password_field.text()
-            self.login_gif = QMovie(get_path("gifs/294-1.gif"))
-            self.ui.loading.setMovie(self.login_gif)
-            self.startAnimation(self.login_gif)
-            self.setbtngrey(self.ui.btn_login)
-        else:
-            username = self.username
-            password = self.password
+    def verify2FA(self):
+        self.code = self.ui.password_field_2.text()
+        if len(self.code) >= 6:
+            self.login_gif_2 = QMovie(get_path("gifs/294-1.gif"))
+            self.ui.loading_2.setHidden(False)
+            self.ui.loading_2.setMovie(self.login_gif_2)
+            self.startAnimation(self.login_gif_2)
+            self.setbtngrey(self.ui.btn_login_2)
+            sessionID = self._2FA_loginData["sessionID"]
+            self._2FA_loginData[sessionID] = int(self.code)
+            del self._2FA_loginData["sessionID"]
+            self.verify_2FA_code(self._2FA_loginData)
+
+    def verify_2FA_code(self, data):
         self.loginthread = QThread()
-        self.loginworker = LoginWorker(username, password)
+        self.loginworker = TwoStepVerificationWorker(data)
         self.loginworker.moveToThread(self.loginthread)
         self.loginthread.started.connect(self.loginworker.run)
         self.loginworker.finished.connect(self.loginthread.quit)
@@ -511,38 +547,88 @@ class MainApp(QMainWindow):
         self.loginthread.finished.connect(self.loginthread.deleteLater)
         self.loginthread.start()
 
+    def login(self):
+        username = ""
+        password = ""
+        if not self.isSessionExpired:
+            username = self.ui.username_field.text()
+            password = self.ui.password_field.text()
+            self.login_gif = QMovie(get_path("gifs/294-1.gif"))
+            self.login_gif_2 = QMovie(get_path("gifs/294-1.gif"))
+            self.ui.loading.setMovie(self.login_gif)
+            self.ui.loading_2.setMovie(self.login_gif_2)
+
+            self.startAnimation(self.login_gif)
+            self.setbtngrey(self.ui.btn_login)
+        else:
+            username = self.username
+            password = self.password
+        self.loginthread = QThread()
+        self.loginworker = LoginWorker(username, password)
+        self.loginworker.moveToThread(self.loginthread)
+        self.loginworker._2fa_prompt.connect(self._2fa)
+        self.loginworker._2fa_data.connect(self.update2FAData)
+        self.loginthread.started.connect(self.loginworker.run)
+        self.loginworker.finished.connect(self.loginthread.quit)
+        self.loginworker.finished.connect(self.loginworker.deleteLater)
+        self.loginworker.result.connect(self.loginProgress)
+        self.loginworker.error.connect(self.loginError)
+        self.loginworker.session.connect(self.ticketSession)
+        self.loginthread.finished.connect(self.loginthread.deleteLater)
+        self.loginthread.start()
+
+    @pyqtSlot(bool)
+    def _2fa(self, _2fa_prompt):
+        print("Inside the login 2fa prompt")
+        if _2fa_prompt:
+            self._2FA_prompt = _2fa_prompt
+            if self._2FA_prompt:
+                self.ui.twofactor.setHidden(False)
+                self.ui.login_frame.setHidden(True)
+
+    @pyqtSlot(object)
+    def update2FAData(self, data):
+        self._2FA_loginData = data
+
     @pyqtSlot(object)
     def ticketSession(self, _sess):
         self.session = _sess
 
-    @pyqtSlot(int)
+    @pyqtSlot(tuple)
     def loginProgress(self, status):
-        if status == 200:
+        if status[0] == 200:
             if not self.isSessionExpired:
                 self.stopAnimation(self.login_gif)
+                self.stopAnimation(self.login_gif_2)
                 self.ui.stackedWidget.setCurrentWidget(self.ui.parser_page)
                 self.disableTabs(False)
                 self.ParserPage()
             else:
                 self.startSearch()
-        elif status == 403:
+        elif status[0] == 403:
             self.stopAnimation(self.login_gif)
             self.setbtndefault(self.ui.btn_login)
+            self.ui.btn_login.setCheckable(False)
             self.ui.loading.setWordWrap(True)
             self.displaymsg(
                 self.ui.loading, 'Ticketing Forbidden. Please connect to Office Network')
             self.disableTabs()
             self.showDialog('Ticketing Error', QMessageBox.Critical,
                             'Ticketing Forbidden. Please connect to Office Network')
-        elif status == 422:
+        elif status[0] == 401:
             self.stopAnimation(self.login_gif)
+            self.stopAnimation(self.login_gif_2)
             self.setbtndefault(self.ui.btn_login)
+            self.setbtndefault(self.ui.btn_login_2)
+            self.ui.btn_login_2.setCheckable(False)
+            self.ui.btn_login.setCheckable(False)
             self.ui.loading.setWordWrap(True)
-            self.displaymsg(self.ui.loading,
-                            'Username or Password is incorrect')
+            self.ui.loading_2.setWordWrap(True)
+            self.displaymsg(self.ui.loading, status[1])
+            self.displaymsg(self.ui.loading_2, status[1])
+
             self.disableTabs()
-            self.showDialog("Login Error", QMessageBox.Critical,
-                            'Username or Password is incorrect')
+            self.showDialog("Login Error", QMessageBox.Critical, status[1])
 
     @pyqtSlot(tuple)
     def loginError(self, error):

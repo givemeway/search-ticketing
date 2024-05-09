@@ -23,7 +23,7 @@ agent_csv_file_path = os.path.join(
 departmentURL = "https://ticket.idrive.com/scp/ajax.php/tickets/1319774/transfer"
 queryURL = 'https://ticket.idrive.com/scp/tickets.php?sort=date&dir=0&a=search&search-type=&query='
 
-columns = ["Ticket", "Response to User", "Ticket Due", "Department", "Assigned", "Developer",
+columns = ["URL", "Ticket", "Response to User", "Ticket Due", "Department", "Assigned", "Developer",
            "Developer Update", "Response to Dev", "Response Pending to Dev Update", "Notes", "Events"]
 
 agent_tracker_cols = ["Ticket", "Thread_1",
@@ -36,6 +36,8 @@ exclude = ['India Billing Support', 'India Support', 'Indiasupport Supervisors',
            'Returns', 'Dev', 'Spam', 'Support', 'Artificial Intelligence', 'Design', 'Office IT', 'GDPR',
            '— Select —', 'Express', 'IndiaSupport 360'
            ]
+indiasupportAgents = ['Sandeep Kumar G R', 'Santanu Chowdhury', 'Nandu Suresh', 'Ravi Chandra', 'Manikandan Support', 'Goutham MN', 'Nikhil Ugrankar', 'Rahul Raj', 'supreeth s', 'Johnson Prabu', 'Santhosh Support', 'jagadeesh k', 'Harshith D', 'Shanmugaraj M', 'Goutam Support', 'Sumit Sangwai', 'Praveen Shivappa', 'karthik ramamurthy', 'Arun Krishnan', 'Akhil Pedada', 'Deepak Reddy', 'prasanjit chatterjee', 'Chandan Support', 'rajkumar kb',
+                      'Chetan G', 'Suraj Hekare', 'Vinil PV', 'Rakesh V', 'Jaspher Issac', 'Vikram Mutharapu', 'Krishna Kumar', 'Akshay V', 'Suraj Kumar', 'Melvin mathew', 'Arjun nk', 'akash waghamare', 'Sai Deep', 'Prabhu PT', 'Karthik Natarajan', 'Chethan Kumar', 'Aneesh Ram', 'Johnny Thomas', 'Sandeep  Shenoy', 'Harish Babu', 'Laxmon Philip', 'Krishna Menedhar', 'Satish Ningaiah', 'Udaya narayan', 'Santanu Chowdhury', 'Sarthak HS']
 
 
 exclude = set(exclude)
@@ -165,7 +167,11 @@ def extract_agents(session, departments, department, visited):
     try:
         agentsURL = departments[department]
         agents = set(get_agents_or_departments(session, agentsURL))
-        visited[department] = agents
+        if department == "India Support":
+            agents = set(indiasupportAgents)
+            visited["India Support"] = agents
+        else:
+            visited[department] = agents - set(indiasupportAgents)
         return agents
 
     except Exception as e:
@@ -193,7 +199,6 @@ def find_due_date(session, departments, escalated,
         if escalated['department'] not in visited:
             extract_agents(session, departments,
                            escalated['department'], visited)
-
     while i < notes_len:
         note = notes.pop()
 
@@ -246,7 +251,7 @@ def get_ticket_html_content(session, ticket):
             0].get_text().split("Support /")[-1].strip()
         assigned_agent = soup.select(assigned_agent_selector)[
             0].get_text().split("Support /")[-1].strip()
-        return (soup, assigned_department, assigned_agent)
+        return (soup, assigned_department, assigned_agent, ticketURL)
     except Exception as e:
         error.exception(e)
         return None
@@ -278,7 +283,7 @@ def process_ticket(ticket, visited, payload):
     agents_in_departments = payload['agents_in_department']
     html_soup = get_ticket_html_content(session, ticket)
     if html_soup is not None:
-        soup, assigned_depart, assigned_agent = html_soup
+        soup, assigned_depart, assigned_agent, ticketURL = html_soup
         if (isinstance(soup, bs4.BeautifulSoup)):
             notes = find_notes(soup, selector1, selector2)
             responses = find_responses(soup, selector4, selector5)
@@ -298,6 +303,7 @@ def process_ticket(ticket, visited, payload):
             due['department'] = assigned_depart
             due['assigned'] = assigned_agent
             due['computed'] = True
+            due['url'] = ticketURL
             per = math.ceil((idx/payload['total'])*100)
             payload["pBar"].emit(per)
             return due
@@ -317,7 +323,6 @@ def escalation_worker(_dict):
     session = _dict['session']
     _dict['departments'] = set(
         get_agents_or_departments(session, departmentURL))
-
     with ThreadPoolExecutor(n_workers) as exe:
         futures = [exe.submit(process_ticket, ticket, visited, _dict)
                    for ticket in _dict['tickets']]
@@ -357,6 +362,9 @@ def msg_res_eta(ticket, responses, messages):
                                 responses.append(res)
                                 break
                             elif time_diff <= 3600:
+                                time_diff_dict["Thread_"+str(idx+1)] = "Received: " + \
+                                    msg['time'] + " || " + \
+                                    "Replied: " + temp_diff
                                 break
                     elif time_diff < 0:
                         responses.append(res)
@@ -433,32 +441,36 @@ def create_dataframe_csv(processed_tickets):
     df = []
     for row in processed_tickets:
         if row['computed']:
-            df.append([row['ticket'],
-                       row['UsersResponsePending'],
-                       row["due"],
-                       row['department'],
-                       row['assigned'],
-                       None if row["updatedAgent"] is None else row["updatedAgent"]["agent"],
-                       None if row["updatedAgent"] is None else
-                       datetime.now() - time(row["updatedAgent"]['timestamp']),
-                       row['assignedAgentUpdate'],
-                       row["agentUpdatePending"],
-                       row['notes'],
-                       row['events']
-                       ])
+            df.append([
+                row['url'],
+                row['ticket'],
+                row['UsersResponsePending'],
+                row["due"],
+                row['department'],
+                row['assigned'],
+                None if row["updatedAgent"] is None else row["updatedAgent"]["agent"],
+                None if row["updatedAgent"] is None else
+                datetime.now() - time(row["updatedAgent"]['timestamp']),
+                row['assignedAgentUpdate'],
+                row["agentUpdatePending"],
+                row['notes'],
+                row['events']
+            ])
         else:
-            df.append([row['ticket'],
-                       "Compute Error",
-                       "Compute Error",
-                       "Compute Error",
-                       "Compute Error",
-                       "Compute Error",
-                       "Compute Error",
-                       "Compute Error",
-                       "Compute Error",
-                       "Compute Error",
-                       "Compute Error"
-                       ])
+            df.append([
+                "Compute Error",
+                row['ticket'],
+                "Compute Error",
+                "Compute Error",
+                "Compute Error",
+                "Compute Error",
+                "Compute Error",
+                "Compute Error",
+                "Compute Error",
+                "Compute Error",
+                "Compute Error",
+                "Compute Error"
+            ])
     return df
 
 

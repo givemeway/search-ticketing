@@ -325,7 +325,7 @@ def search_query(s, event=None, _dict=None, ticketURL=None, searchQuery=None):
         loginMsg = loginPageSoup.find(id="login-message")
         if loginMsg is not None and len(loginMsg) > 0:
             loginMsg = loginMsg.getText().strip()
-            if loginMsg == "Invalid login" or loginMsg == "Access denied" or "Authentication Required":
+            if loginMsg == "Invalid login" or loginMsg == "Access denied" or loginMsg == "Authentication Required":
                 _dict["sessionError"].emit(True)
                 expiredAt = {"idx": idx, "email_idx": email_idx,
                              "subject_idx": subject_idx, "err_idx": err_idx}
