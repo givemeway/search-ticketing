@@ -244,7 +244,6 @@ def get_ticket_html_content(session, ticket):
         ticketSearch = search_query(session, searchQuery=ticket)
         searchSoup = BeautifulSoup(ticketSearch.content, 'html5lib')
         ticketURL = extract_ticket_url(searchSoup, ticket)
-
         ticketContent = search_query(session, ticketURL=ticketURL)
         soup = BeautifulSoup(ticketContent.content, 'html5lib')
         assigned_department = soup.select(depart_name_selector)[
@@ -378,7 +377,7 @@ def process_agent_ticket(ticket, visited, payload):
     session = payload['session']
     html_soup = get_ticket_html_content(session, ticket)
     if html_soup is not None:
-        soup, assigned_depart, assigned_agent = html_soup
+        soup, assigned_depart, assigned_agent, ticketURL = html_soup
         if (isinstance(soup, bs4.BeautifulSoup)):
             responses = find_responses(soup, selector4, selector5)
             messages = find_messages(soup, selector6, selector7)
