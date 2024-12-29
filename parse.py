@@ -12,6 +12,7 @@ from multiprocessing.pool import ThreadPool
 from login import create_connection
 import mbox
 import base64
+from email.header import decode_header
 
 
 try:
@@ -23,6 +24,8 @@ try:
         os.remove('logs/ticket_errors.log')
     if os.path.exists('logs/missing_tickets.log'):
         os.remove('logs/missing_tickets.log')
+    if os.path.exists('logs/parse_error.log'):
+        os.remove('logs/parse_error.log')
 except Exception as e:
     print('Unable to delete', e)
 # regex = '''([a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*)'''
@@ -38,11 +41,14 @@ logger = logging.getLogger('main')
 missing_ticket = logging.getLogger('missing')
 missing_sub_logger = logging.getLogger('info')
 error = logging.getLogger('error')
+parse_error = logging.getLogger("error")
 ############# SET LOG LEVEL ##################
 missing_sub_logger.setLevel(logging.WARNING)
 logger.setLevel(logging.INFO)
 missing_ticket.setLevel(logging.DEBUG)
 error.setLevel(logging.ERROR)
+parse_error.setLevel(logging.ERROR)
+
 ############  FORMATTER #######################
 formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
 
@@ -51,17 +57,20 @@ file_handler = logging.FileHandler('logs/info.log')
 missing_ticket_file_handler = logging.FileHandler('logs/missing_tickets.log')
 missing_sub_logger_file_handler = logging.FileHandler('logs/warning.log')
 error_file_handler = logging.FileHandler('logs/ticket_errors.log')
+parse_error_handler = logging.FileHandler("logs/parse_error.log")
 ################## set formatter ################################
 missing_sub_logger_file_handler.setFormatter(formatter)
 missing_ticket_file_handler.setFormatter(formatter)
 file_handler.setFormatter(formatter)
 error_file_handler.setFormatter(formatter)
+parse_error_handler.setFormatter(formatter)
 
 #################### Add handler ############################
 logger.addHandler(file_handler)
 missing_ticket.addHandler(missing_ticket_file_handler)
 missing_sub_logger.addHandler(missing_sub_logger_file_handler)
 error.addHandler(error_file_handler)
+parse_error.addHandler(parse_error_handler)
 
 
 def get_timestamp(string, gmail=True):
@@ -157,6 +166,7 @@ def parse_eml(eml):
             timestamp = get_timestamp(eml_msg['Date'])
             t = time.localtime(timestamp)
             local_time = time.strftime(time_format, t)
+
             if "support@idrive.com" in regex.findall(eml_msg['From']) or \
                 "support@ibackup.com" in regex.findall(eml_msg['From']) or \
                 "sales@idrive.com" in regex.findall(eml_msg['From']) or \
@@ -276,96 +286,104 @@ def parse_mbox(mbox_name, mboxObj, total_emails, progress, progress_bar):
                 cur.execute(insert_query, value)
 
             for idx, msg in enumerate(mboxObj):
-                items += 1
-                per = round((idx/total_emails)*100)
+                try:
+                    items += 1
+                    per = round((idx/total_emails)*100)
 
-                attachments = find_attachment(msg)
-                progress_bar.emit((per, idx+1, msg['From']))
+                    attachments = find_attachment(msg)
+                    progress_bar.emit((per, idx+1, msg['From']))
 
-                if "support@idrive.com" in regex.findall(msg['From']) or \
-                    "no-reply@idrive.com" in regex.findall(msg['From']) or \
-                    "sales@idrive.com" in regex.findall(msg['From']) or \
-                    "sales@remotepc.com" in regex.findall(msg['From']) or \
-                    "sales@ibackup.com" in regex.findall(msg['From']) or\
-                    "noreply@idrivee2.com" in regex.findall(msg['From']) or \
-                    "support@remotepc.com" in regex.findall(msg['From']) or \
-                    "privacy@idrive.com" in regex.findall(msg['From']) or \
-                    "info@idrive.com" in regex.findall(msg['From']) or \
-                    "support@idrivemirror.com" in regex.findall(msg['From']) or \
-                    "info@remotepc.com" in regex.findall(msg['From']) or \
-                    "privacy@remotepc.com" in regex.findall(msg['From']) or \
-                    "support@send.idrive.com" in regex.findall(msg['From']) or \
-                    "support@send.ibackup.com" in regex.findall(msg['From']) or \
-                    "support@send.remotepc.com" in regex.findall(msg['From']) or \
-                    "privacy@ibackup.com" in regex.findall(msg['From']) or \
-                        "support@ibackup.com" in regex.findall(msg['From']):
-                    email_data = mbox.GmailMboxMessage(msg)
-                    emails = []
-                    for content in email_data.read_email_payload():
+                    emails_found = regex.findall(msg['From'])
+                    if "support@idrive.com" in emails_found or \
+                        "no-reply@idrive.com" in emails_found or \
+                        "sales@idrive.com" in emails_found or \
+                        "sales@remotepc.com" in emails_found or \
+                        "sales@ibackup.com" in emails_found or\
+                        "noreply@idrivee2.com" in emails_found or \
+                        "support@remotepc.com" in emails_found or \
+                        "privacy@idrive.com" in emails_found or \
+                        "info@idrive.com" in emails_found or \
+                        "support@idrivemirror.com" in emails_found or \
+                        "info@remotepc.com" in emails_found or \
+                        "privacy@remotepc.com" in emails_found or \
+                        "support@send.idrive.com" in emails_found or \
+                        "support@send.ibackup.com" in emails_found or \
+                        "support@send.remotepc.com" in emails_found or \
+                        "privacy@ibackup.com" in emails_found or \
+                            "support@ibackup.com" in emails_found:
+                        email_data = mbox.GmailMboxMessage(msg)
+                        emails = []
+                        for content in email_data.read_email_payload():
+                            try:
+                                emails.extend(regex.findall(content[2]))
+                            except Exception as e:
+                                error.exception(
+                                    f"ParseMBox: {e} : {msg['X-Original-Sender']} - {msg['Subject']}")
                         try:
-                            emails.extend(regex.findall(content[2]))
+                            missing_sub_logger.warning('Subject: {} : From: {} : Emails in body : {}'.format(msg['Subject'],
+                                                                                                             msg['X-Original-Sender'], emails[:3]))
+                            logger.info('Emails: {} : Subject: {} : TimeStamp : {}'.format(
+                                regex.findall(msg['X-Original-Sender']), msg['Subject'], msg['Date']))
+
+                            timestamp = get_timestamp(msg['Date'])
+                            t = time.localtime(timestamp)
+                            local_time = time.strftime(time_format, t)
+                            value = (
+                                f'''{emails[:3]}''', msg['Subject'], local_time, f'''{attachments}''')
+                            from_email.append(
+                                [items, emails[:3], msg['Subject'], local_time, attachments, email_data])
+                            progress.emit(
+                                [items, emails[:3], msg['Subject'], local_time, attachments, email_data])
+                            cur.execute(query, value)
                         except Exception as e:
                             error.exception(
-                                f"ParseMBox: {e} : {msg['X-Original-Sender']} - {msg['Subject']}")
-                    try:
-                        missing_sub_logger.warning('Subject: {} : From: {} : Emails in body : {}'.format(msg['Subject'],
-                                                                                                         msg['X-Original-Sender'], emails[:3]))
-                        logger.info('Emails: {} : Subject: {} : TimeStamp : {}'.format(
-                            regex.findall(msg['X-Original-Sender']), msg['Subject'], msg['Date']))
+                                f"Logging Error: {e} - {msg['X-Original-Sender']} - {msg['Subject']}")
 
-                        timestamp = get_timestamp(msg['Date'])
-                        t = time.localtime(timestamp)
-                        local_time = time.strftime(time_format, t)
-                        value = (
-                            f'''{emails[:3]}''', msg['Subject'], local_time, f'''{attachments}''')
-                        from_email.append(
-                            [items, emails[:3], msg['Subject'], local_time, attachments, email_data])
-                        progress.emit(
-                            [items, emails[:3], msg['Subject'], local_time, attachments, email_data])
-                        cur.execute(query, value)
-                    except Exception as e:
-                        error.exception(
-                            f"Logging Error: {e} - {msg['X-Original-Sender']} - {msg['Subject']}")
+                    elif "supportgroup@idrive.com" in regex.findall(msg['From']) or \
+                            "group1@remotepc.com" in regex.findall(msg['From']):
+                        try:
+                            logger.info('Emails: {} : Subject: {} : TimeStamp : {}'.format(
+                                regex.findall(msg['X-Original-Sender']), msg['Subject'], msg['Date'], attachments))
 
-                elif "supportgroup@idrive.com" in regex.findall(msg['From']) or \
-                        "group1@remotepc.com" in regex.findall(msg['From']):
-                    try:
-                        logger.info('Emails: {} : Subject: {} : TimeStamp : {}'.format(
-                            regex.findall(msg['X-Original-Sender']), msg['Subject'], msg['Date'], attachments))
+                            timestamp = get_timestamp(msg['Date'])
+                            t = time.localtime(timestamp)
+                            local_time = time.strftime(time_format, t)
+                            value = (f'''{regex.findall(msg['X-Original-Sender'])}''',
+                                     msg['Subject'], local_time, f'''{attachments}''')
+                            body_content = mbox.GmailMboxMessage(msg)
+                            progress.emit([items, regex.findall(
+                                msg['X-Original-Sender']), msg['Subject'], local_time, attachments, body_content])
+                            from_email.append([items, regex.findall(
+                                msg['X-Original-Sender']), msg['Subject'], local_time, attachments, body_content])
+                            cur.execute(query, value)
+                        except Exception as e:
+                            error.exception(
+                                f"Logging Error : {e} - {msg['X-Original-Sender']}")
 
-                        timestamp = get_timestamp(msg['Date'])
-                        t = time.localtime(timestamp)
-                        local_time = time.strftime(time_format, t)
-                        value = (f'''{regex.findall(msg['X-Original-Sender'])}''',
-                                 msg['Subject'], local_time, f'''{attachments}''')
-                        body_content = mbox.GmailMboxMessage(msg)
-                        progress.emit([items, regex.findall(
-                            msg['X-Original-Sender']), msg['Subject'], local_time, attachments, body_content])
-                        from_email.append([items, regex.findall(
-                            msg['X-Original-Sender']), msg['Subject'], local_time, attachments, body_content])
-                        cur.execute(query, value)
-                    except Exception as e:
-                        error.exception(
-                            f"Logging Error : {e} - {msg['X-Original-Sender']}")
+                    else:
+                        try:
+                            logger.info('Emails: {} : Subject: {} : TimeStamp : {}'.format(
+                                regex.findall(msg['From']), msg['Subject'], msg['Date'], attachments))
 
-                else:
-                    try:
-                        logger.info('Emails: {} : Subject: {} : TimeStamp : {}'.format(
-                            regex.findall(msg['From']), msg['Subject'], msg['Date'], attachments))
+                            timestamp = get_timestamp(msg['Date'])
+                            t = time.localtime(timestamp)
+                            local_time = time.strftime(time_format, t)
+                            value = (
+                                f'''{regex.findall(msg['From'])}''', msg['Subject'], local_time, f'''{attachments}''')
+                            body_content = mbox.GmailMboxMessage(msg)
+                            progress.emit([items, regex.findall(
+                                msg['From']), msg['Subject'], local_time, attachments, body_content])
+                            from_email.append([items, regex.findall(
+                                msg['From']), msg['Subject'], local_time, attachments, body_content])
+                            cur.execute(query, value)
+                        except Exception as e:
+                            error.exception(
+                                f"Logging Error : {e} - {msg['From']}")
+                except Exception as e:
+                    print(e)
+                    parse_error.error(
+                        f"Logging Error: {e} - {msg['X-Original-Sender']} - {msg['Subject']} - {msg['From']}")
 
-                        timestamp = get_timestamp(msg['Date'])
-                        t = time.localtime(timestamp)
-                        local_time = time.strftime(time_format, t)
-                        value = (
-                            f'''{regex.findall(msg['From'])}''', msg['Subject'], local_time, f'''{attachments}''')
-                        body_content = mbox.GmailMboxMessage(msg)
-                        progress.emit([items, regex.findall(
-                            msg['From']), msg['Subject'], local_time, attachments, body_content])
-                        from_email.append([items, regex.findall(
-                            msg['From']), msg['Subject'], local_time, attachments, body_content])
-                        cur.execute(query, value)
-                    except Exception as e:
-                        error.exception(f"Logging Error : {e} - {msg['From']}")
             cur.connection.commit()
     else:
         # print("Error", "Something went wrong. Try again")

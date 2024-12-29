@@ -130,7 +130,7 @@ def verify2FA(sessionData, _session):
         return (request_errors[3], err)
 
 
-def ticket_session(name, secret, _session, _2fa, isExpired=False):
+def ticket_session(name, secret, _session, _2fa, CSRFToken, isExpired=False):
     global headers
     with requests.Session() as s:
         url = "https://ticket.idrive.com/scp/login.php"
@@ -139,7 +139,7 @@ def ticket_session(name, secret, _session, _2fa, isExpired=False):
             if r.status_code == 403:
                 return (403, "Login Forbidden")  # unauthorized
             else:
-                return build_header(r, s, url, name, secret, _session, _2fa)
+                return build_header(r, s, url, name, secret, _session, _2fa, CSRFToken)
         except requests.exceptions.HTTPError as errh:
             return (request_errors[0], errh)
         except requests.exceptions.ConnectionError as errc:
@@ -148,7 +148,6 @@ def ticket_session(name, secret, _session, _2fa, isExpired=False):
             return (request_errors[2], errt)
         except requests.exceptions.RequestException as err:
             return (request_errors[3], err)
-
 
 # __CSRFToken__: 8e5f3894030dd6faf627e8ec5769bb3a0dbb32e6
 # b97458938d61be: 406603
@@ -238,7 +237,7 @@ def updateDB(username, password):
                 cur.connection.commit()
 
 
-def build_header(r, s, url, username, password, _session, _2fa):
+def build_header(r, s, url, username, password, _session, _2fa, CSRFToken):
     global login_data
     try:
         soup = BeautifulSoup(r.content, 'html5lib')
@@ -246,6 +245,7 @@ def build_header(r, s, url, username, password, _session, _2fa):
             'input', attrs={'name': '__CSRFToken__'})['value']
         login_data['userid'] = username
         login_data['passwd'] = password
+        CSRFToken.emit(login_data['__CSRFToken__'])
         r = s.post(url, data=login_data, headers=headers)
         status, data = validateLogin(r, s, username, password)
 

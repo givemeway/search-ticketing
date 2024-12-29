@@ -14,7 +14,7 @@ from findAndLoad import loadPrevious, search_ticket
 from new_ui_2fa import Ui_TicketingSearchTool
 from login import *
 from searchTicket import ticketing, get_path
-from escalation_tracker import escalation_worker, agent_tracker_worker
+from escalation_tracker import escalation_worker, agent_tracker_worker, note_update_worker
 from copy import deepcopy
 # import webbrowser
 
@@ -69,6 +69,7 @@ class LoginWorker(QObject):
     error = pyqtSignal(tuple)
     _2fa_data = pyqtSignal(object)
     _2fa_prompt = pyqtSignal(bool)
+    CSRFToken = pyqtSignal(str)
 
     def __init__(self, username, password):
         super().__init__()
@@ -78,9 +79,10 @@ class LoginWorker(QObject):
     def run(self):
         _session = self.session
         _2fa_data = self._2fa_data
+        CSRFToken = self.CSRFToken
 
         status, msg = ticket_session(
-            self.username, self.password, _session, _2fa_data)
+            self.username, self.password, _session, _2fa_data, CSRFToken)
         if status == 200:
             self.result.emit((status, msg))
         elif status == 403:
@@ -160,11 +162,13 @@ class EscalationWorker(QObject):
     warning = pyqtSignal(object)
     processing = pyqtSignal(tuple)
 
-    def __init__(self, tickets, session, tracker):
+    def __init__(self, tickets, session, tracker, owner=None, CSRFToken=None):
         super().__init__()
         self.tickets = tickets
         self.session = session
         self.tracker = tracker
+        self.owner = owner
+        self.CSRFToken = CSRFToken
 
     def run(self):
         _dict = {'tickets': self.tickets,
@@ -174,11 +178,15 @@ class EscalationWorker(QObject):
                  'pBar': self.pBar,
                  'error': self.error,
                  'total': len(self.tickets),
+                 "owner": self.owner,
+                 "CSRFToken": self.CSRFToken
                  }
         if self.tracker == "AGENT":
             agent_tracker_worker(_dict)
         elif self.tracker == "ESCALATION":
             escalation_worker(_dict)
+        elif self.tracker == "NOTES":
+            note_update_worker(_dict)
         self.finished.emit()
 
 
@@ -270,6 +278,11 @@ class MainApp(QMainWindow):
         self.ui.tracker_csv_toolButton.clicked.connect(self.selectCSV)
         self.ui.tracker_pushButton.setHidden(True)
         self.ui.tracker_pushButton.clicked.connect(self.escalationSearch)
+        self.ui.agent_radioButton.clicked.connect(self.updateRadioSelection)
+        self.ui.notes_radioButton.clicked.connect(
+            self.updateRadioSelection)
+        self.ui.escalation_radioButton.clicked.connect(
+            self.updateRadioSelection)
 
         # ============================================================ #
         self.isSessionExpired = False
@@ -321,6 +334,9 @@ class MainApp(QMainWindow):
 
         self.green_clip_icon = QIcon(get_path("icons/paper-clip.png"))
         self.red_clip_icon = QIcon(get_path("icons/attachment.png"))
+        self.tracker = None
+        self.owner = None
+        self.CSRFToken = ""
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         close = QMessageBox.question(
@@ -370,14 +386,16 @@ class MainApp(QMainWindow):
             except Exception as e:
                 error.exception(e)
 
-    def escalationSearch(self):
-        tracker = None
+    def updateRadioSelection(self):
+        self.tracker = None
         if self.ui.agent_radioButton.isChecked():
-            tracker = "AGENT"
+            self.tracker = "AGENT"
         elif self.ui.escalation_radioButton.isChecked():
-            tracker = "ESCALATION"
-        else:
-            return
+            self.tracker = "ESCALATION"
+        elif self.ui.notes_radioButton.isChecked():
+            self.tracker = "NOTES"
+
+    def escalationSearch(self):
         self.time = 0
         self.timer = QTimer()
         self.timer.start(1000)
@@ -385,12 +403,13 @@ class MainApp(QMainWindow):
         self.tickets = []
         self.ui.escalation_progressBar.setValue(0)
         self.tickets = self.extract_tickets(self.csvPath)
+        print(self.tickets)
         self.text_gif = QMovie(get_path('gifs/text_fading.gif'))
         self.ui.escalation_groupLabel.setMovie(self.text_gif)
         self.startAnimation(self.text_gif)
 
         self.escalationworker = EscalationWorker(
-            self.tickets, self.session, tracker)
+            self.tickets, self.session, self.tracker, self.owner, self.CSRFToken)
         self.escalationThread = QThread()
         self.escalationworker.moveToThread(self.escalationThread)
         self.escalationThread.started.connect(self.escalationworker.run)
@@ -398,7 +417,7 @@ class MainApp(QMainWindow):
         self.escalationworker.finished.connect(
             self.escalationworker.deleteLater)
         self.escalationworker.finished.connect(lambda: self.showDialog(
-            "Escalation Tracker", QMessageBox.Information, "Escalation Tracker Complete!" if tracker == "ESCALATION" else "Agent Tracker Complete!"))
+            "Escalation Tracker", QMessageBox.Information, "Escalation Tracker Complete!" if self.tracker == "ESCALATION" else "Notes Update Complete!" if self.tracker == "NOTES" else "Agents Tracker Complete!"))
         self.escalationworker.finished.connect(
             lambda: self.ui.tracker_pushButton.setEnabled(True))
         self.escalationworker.finished.connect(
@@ -438,15 +457,21 @@ class MainApp(QMainWindow):
             f"Time Elapsed   : {self.convertSecsToHHMMSS(self.time)}")
 
     def extract_tickets(self, csvFilePath):
-        img_obj = []
-        columns = ['ticket']
+        tickets = []
         try:
             with open(csvFilePath, 'r', encoding='utf-8') as file:
                 reader = csv.reader(file, delimiter=',')
-                for row in reader:
-                    if row != columns:
-                        img_obj.append(row[0])
-            return img_obj
+                for idx, row in enumerate(reader):
+                    if self.tracker != "NOTES":
+                        if idx > 1:
+                            tickets.append(row[0])
+                    else:
+                        if idx == 1:
+                            self.owner = row[0]
+                        elif idx > 1:
+                            tickets.append(row)
+
+            return tickets
         except Exception as e:
             error.exception(e)
             return e
@@ -574,12 +599,16 @@ class MainApp(QMainWindow):
         self.loginworker.result.connect(self.loginProgress)
         self.loginworker.error.connect(self.loginError)
         self.loginworker.session.connect(self.ticketSession)
+        self.loginworker.CSRFToken.connect(self.updateCSRFToken)
         self.loginthread.finished.connect(self.loginthread.deleteLater)
         self.loginthread.start()
 
+    @pyqtSlot(str)
+    def updateCSRFToken(self, token):
+        self.CSRFToken = token
+
     @pyqtSlot(bool)
     def _2fa(self, _2fa_prompt):
-        print("Inside the login 2fa prompt")
         if _2fa_prompt:
             self._2FA_prompt = _2fa_prompt
             if self._2FA_prompt:

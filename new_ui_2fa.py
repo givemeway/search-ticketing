@@ -991,6 +991,15 @@ class Ui_TicketingSearchTool(object):
         self.agent_radioButton.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.agent_radioButton.setObjectName("agent_radioButton")
         self.horizontalLayout_13.addWidget(self.agent_radioButton)
+
+        # =====================================
+        self.notes_radioButton = QtWidgets.QRadioButton(
+            self.escalation_groupBox)
+        self.notes_radioButton.setMinimumSize(QtCore.QSize(0, 0))
+        self.notes_radioButton.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        self.notes_radioButton.setObjectName("notes_radioButton")
+        self.horizontalLayout_13.addWidget(self.notes_radioButton)
+        # ========================================================
         self.escalation_radioButton = QtWidgets.QRadioButton(
             self.escalation_groupBox)
         self.escalation_radioButton.setMinimumSize(QtCore.QSize(0, 0))
@@ -1403,6 +1412,8 @@ class Ui_TicketingSearchTool(object):
             self.tab_3), _translate("TicketingSearchTool", "E-mails Missing"))
         self.agent_radioButton.setText(_translate(
             "TicketingSearchTool", "Agent Tracker"))
+        self.notes_radioButton.setText(_translate(
+            "TicketingSearchTool", "Add Notes"))
         self.escalation_radioButton.setText(_translate(
             "TicketingSearchTool", "Escalation Tracker"))
         self.tracker_pushButton.setText(

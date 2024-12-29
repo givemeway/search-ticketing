@@ -1,9 +1,11 @@
 from bs4 import BeautifulSoup
+import re
 import bs4
 import math
 import csv
 from itertools import zip_longest
 from datetime import datetime
+from urllib.parse import urlparse, parse_qs
 from searchTicket import search_query
 from concurrent.futures import ThreadPoolExecutor
 from parse import error
@@ -22,6 +24,25 @@ agent_csv_file_path = os.path.join(
     os.path.expanduser("~"), "Desktop", "agents.csv")
 departmentURL = "https://ticket.idrive.com/scp/ajax.php/tickets/1319774/transfer"
 queryURL = 'https://ticket.idrive.com/scp/tickets.php?sort=date&dir=0&a=search&search-type=&query='
+note_edit_url = 'https://ticket.idrive.com/scp/ajax.php/tickets/{}/thread/{}/edit'
+note_add_url = "https://ticket.idrive.com/scp/tickets.php?id={}"
+
+note_edit_body = {
+    "title": "",
+    "body": "",
+    "__CSRFToken__": "",
+    "commit": "save"
+}
+
+note_add_body = {
+    "__CSRFToken__": "",
+    "id": "1606884",
+    "lockCode": "",
+    "locktime": "0",
+    "a": "postnote",
+    "title": "",
+    "note": "",
+}
 
 columns = ["URL", "Ticket", "Response to User", "Ticket Due", "Department", "Assigned", "Developer",
            "Developer Update", "Response to Dev", "Response Pending to Dev Update", "Notes", "Events"]
@@ -106,6 +127,37 @@ def find_notes(soup, selector1, selector2):
                                                      '%m/%d/%y %I:%M %p').timestamp()
                       })
     return notes
+
+
+def find_thread_id(soup):
+    threads = []
+    for thread in soup.find_all("div", {"id": re.compile(r"^thread-entry-\d{7}$")}):
+        match = re.match(r"^thread-entry-\d{7}$", thread.get("id"))
+        obj = {}
+        if (match):
+            obj["id"] = match.group()
+        for b, time in zip_longest(thread.select(selector1), thread.select(selector2)):
+            obj['agent'] = b.get_text().strip()
+            obj['time'] = time.get_text().strip().replace("\u202f", " ")
+            obj['timestamp'] = datetime.strptime(time.get_text().strip().replace("\u202f", " "),
+                                                 '%m/%d/%y %I:%M %p').timestamp()
+            obj["type"] = "note"
+            threads.append(obj)
+        for b, time in zip_longest(thread.select(selector4), thread.select(selector5)):
+            obj['agent'] = b.get_text().strip()
+            obj['time'] = time.get_text().strip().replace("\u202f", " ")
+            obj['timestamp'] = datetime.strptime(time.get_text().strip().replace("\u202f", " "),
+                                                 '%m/%d/%y %I:%M %p').timestamp()
+            obj["type"] = "response"
+            threads.append(obj)
+        for b, time in zip_longest(thread.select(selector6), thread.select(selector7)):
+            obj['agent'] = b.get_text().strip()
+            obj['time'] = time.get_text().strip().replace("\u202f", " ")
+            obj['timestamp'] = datetime.strptime(time.get_text().strip().replace("\u202f", " "),
+                                                 '%m/%d/%y %I:%M %p').timestamp()
+            obj["type"] = "message"
+            threads.append(obj)
+    return threads
 
 
 def find_ticket_events(soup, selector):
@@ -412,6 +464,101 @@ def agent_tracker_worker(_dict):
             processed.append(due)
     df = create_agent_dataframe_csv(processed)
     write_csv(agent_csv_file_path, agent_tracker_cols, df)
+
+
+def note_mode(threads, owner):
+    while len(threads) > 0:
+        item = threads.pop()
+        if (item["type"] == "message" or item['type'] == "response"):
+            return {"note": "add", "id": None}
+        elif item['type'] == "note":
+            if (owner.strip() == item["agent"].strip()):
+                return {"note": "edit", "id": item["id"].split("-")[-1]}
+            else:
+                return {"note": "add", "id": None}
+
+
+def add_note(session, title, body, url, CSRFToken, id, error):
+    try:
+        body = {
+            "__CSRFToken__": CSRFToken,
+            "id": id,
+            "lockCode": "",
+            "locktime": "0",
+            "a": "postnote",
+            "title": title,
+            "note": body,
+        }
+        return session.post(url, data=body)
+    except Exception as e:
+        error.emit(e)
+        print(e)
+        return e
+
+
+def edit_note(session, title, body, url, CSRFToken, error):
+    try:
+        body = {
+            "title": title,
+            "body": body,
+            "__CSRFToken__": CSRFToken,
+            "commit": "save"
+        }
+        return session.post(url, data=body)
+    except Exception as e:
+        error.emit(e)
+        print(e)
+        return e
+
+
+def process_notes(ticket, payload):
+    global idx
+    idx += 1
+    payload['processing'].emit((ticket[0], idx))
+    session = payload['session']
+    CSRFToken = payload["CSRFToken"]
+    owner = payload["owner"]
+    error = payload["error"]
+    warning = payload["warning"]
+    html_soup = get_ticket_html_content(session, ticket[0])
+    if html_soup is not None:
+        soup, _, _, url = html_soup
+        if (isinstance(soup, bs4.BeautifulSoup)):
+            threads = find_thread_id(soup)
+            parsedURL = urlparse(url)
+            query_params = parse_qs(parsedURL.query)
+            ticket_id = query_params.get("id")[0]
+            mode = note_mode(threads, owner)
+            if mode['note'] == "add":
+                add_note(session, "Need Update", ticket[1],
+                         url, CSRFToken, ticket_id, error)
+            elif mode['note'] == "edit":
+                note_id = mode["id"]
+                edit_url = note_edit_url.format(ticket_id, note_id)
+                edit_note(session, "Need Update", ticket[1],
+                          edit_url, CSRFToken, error)
+            per = math.ceil((idx/payload['total'])*100)
+            payload["pBar"].emit(per)
+
+
+def note_update_worker(_dict):
+    tickets = _dict["tickets"]
+    payload = {}
+    payload["processing"] = _dict["processing"]
+    payload["warning"] = _dict["warning"]
+    payload["pBar"] = _dict["pBar"]
+    payload["error"] = _dict["error"]
+    payload["total"] = _dict["total"]
+    payload["owner"] = _dict["owner"]
+    payload["session"] = _dict["session"]
+    payload["CSRFToken"] = _dict["CSRFToken"]
+
+    with ThreadPoolExecutor(1) as exe:
+        futures = [exe.submit(process_notes, ticket, payload)
+                   for ticket in tickets]
+        for future in futures:
+            done = future.result()
+            print(done)
 
 
 def create_agent_dataframe_csv(processed_tickets):
