@@ -1000,6 +1000,16 @@ class Ui_TicketingSearchTool(object):
         self.notes_radioButton.setObjectName("notes_radioButton")
         self.horizontalLayout_13.addWidget(self.notes_radioButton)
         # ========================================================
+
+        # =====================================
+        self.audit_radio = QtWidgets.QRadioButton(
+            self.escalation_groupBox)
+        self.audit_radio.setMinimumSize(QtCore.QSize(0, 0))
+        self.audit_radio.setMaximumSize(QtCore.QSize(16777215, 16777215))
+        self.audit_radio.setObjectName("audit_radio_button")
+        self.horizontalLayout_13.addWidget(self.audit_radio)
+        # ========================================================
+
         self.escalation_radioButton = QtWidgets.QRadioButton(
             self.escalation_groupBox)
         self.escalation_radioButton.setMinimumSize(QtCore.QSize(0, 0))
@@ -1414,6 +1424,8 @@ class Ui_TicketingSearchTool(object):
             "TicketingSearchTool", "Agent Tracker"))
         self.notes_radioButton.setText(_translate(
             "TicketingSearchTool", "Add Notes"))
+        self.audit_radio.setText(_translate(
+            "TicketingSearchTool", "Call Audit"))
         self.escalation_radioButton.setText(_translate(
             "TicketingSearchTool", "Escalation Tracker"))
         self.tracker_pushButton.setText(

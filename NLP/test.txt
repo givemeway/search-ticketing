@@ -1,0 +1,46 @@
+
+        Username: collectr@gmail.com
+                  EVS Server: evs5014.idrive.com
+                 Total quota: 5368709120000
+                  Used quota: 5596640541918
+              Account status: Y
+              Encryption Key: DEFAULT
+           UNDER MAINTENANCE: No
+                  Hard Limit: n
+                  DataCenter: 
+                       Dedup: on
+        
+    
+
+        - Archive clean up is not working- Took remote- Restarted IDrive services VSS and MSSCP and set them to run as automatic- Performed RecreateDB=1- Did not work- EscalatedSantanuHello. How may I help you?12:00:21 amWilliam GrosshelloSantanuHi WilliamWilliam Grossi need your helpmy size calcluator size 2.8 tbbut you said i need to buy more space beacuse i am using 5.2 tbhow can i fix it?SantanuI will assist you on this. Please provide me the account username / registered email IDWilliam Grosscollectr@gmail.comSantanuLet me checkWilliam GrossthanksSantanuAre you referring to this account ?username: collectr@gmail.com EMAILID: collectr@gmail.comWilliam Grossyes i amcan you connect to my pc?SantanuPlease wait while I am checking the quota usageWe found that you are using 5212 GB used out of 5000 GB of your total quota. Which has exceeded the quota usage. Hence, we request you to perform archive clean up. The Archive Cleanup feature lets you make a one to one match of the local data in the backup set to your account. If data is deleted from your computer that has already been backed up, the corresponding data in your IDrive account would be permanently deleted. You can follow this link as help https://www.idrive.com/help/Windows/archive_cleanup You can also perform manual deletion. by following this link. https://www.idrive.com/help/Windows/deleteWilliam Grossi am running archive clean upSantanuokWilliam Grossif i needed more help i will update youSantanuSureWilliam Grossafter cleanup do i need to do something?to change the size?SantanuNo need it will be auto refreshed after sometimeWilliam Grossok12:25:23 amChat is idle due to 10 minutes of inactivitySantanuIs there anything else that I can help you now ?12:43:37 amChat is idle due to 10 minutes of inactivitySantanuAre you there ?William Grosshellostill after cleanupi see the size please see attachedSantanuPlease click on the quota usage and checkif it updatesWilliam Grosswhere is it?Santanutop right side where the quota is showing just click on thatWilliam Grossthe sameSantanuThen try to perform manual deletion and check if it worksWilliam Grosswhere is it?Santanu You can also perform manual deletion. by following this link as help. https://www.idrive.com/help/Windows/deleteWilliam Grossi cant see delete folderSantanuwhat you can see there ?William Grosstrash folderi cancant find itSantanuTrash data does not occupy the quotaYou can click on the view trash option at the top to get the trash data that you have deletedWilliam Grossone minutetrash folder emptystill same sizeSantanuLet me take the remote accessand checkWilliam Grossokhow?SantanuKindly open the below link https://help.remotepc.com/?id=812901702 Download & install the HelpDesk application. Once the application is installed, kindly let us know.812901702William Grossyou can see the screen?SantanuLet me connect01:20:57 amChat is idle due to 10 minutes of inactivitySantanu.Let it finish the scan and then you can run archive clean upWilliam GrossokWilliam Grosswhat should i do after scanning when ending?Santanuperform the archive clean upSantanuIt will take long time to scanyou can give it a try today.if it does not work then let us knowWilliam GrossokthanksSantanuIs there anything else that I can help you now ?William Grossnot at the momenti will update youSantanuIt was nice talking to you. Have a great day, bye!William Grosshelloscan has been endedstill the same problemSantanuhave you initiated the archive clean up after the scan ?William Grossyes i amSantanuplease re install the app that you have downloaded for remote accessI want to take the remote access once againWilliam Grossokplease connectSantanuokIt seems like that the backup set has been changed that you were usingso you can select all the drives and try to perform archive clean upWilliam Grosswhat?SantanuI can see that there are multiple drivesLet me select the C:\ Drive and D:\ Drive and checkWilliam GrossokSantanuokWilliam Grossyou see the screen?SantanuYes if you want then you can delete those files as they are not available on your computer.William Grossstill the same issuewhat can we do?SantanuYou can manually delete the excess data that you wantWilliam Grosswhats?the sizeare the sameSantanuhave you manually deleted excess data ?William Grossplease see itthe web see the size wrongclient are differentSantanuDo you see that now ?its showing correct onlyWilliam Grosscant besee on tree sizedrive c & dSantanuWilliam, you have backed up C and D Drive data that you wanted.William Grossmaybe it backup recycle nin?SantanuNow its showing the same data that you have backed up.William GrossbinSantanuNo it does not backup recycle binWilliam Grossplease the sizeSantanuYou are performing backup nowWilliam Grossyes i do not know what to dothe size are wrongSantanuLet me checkI am trying to perform RecreateDB=1William GrossokSantanuokI hve initaited RecreateDB=1please do not do anything with the IDrive applet it be completed firstWilliam GrossokSantanuMessage not sent.ok02:32:36 amChat is idle due to 10 minutes of inactivitySantanuHave you got any message ?02:43:45 amChat is idle due to 10 minutes of inactivitySantanuAre you there ?02:53:52 amChat is idle due to 10 minutes of inactivitySantanuAre you still there ?03:04:59 amChat is idle due to 10 minutes of inactivitySantanuWe are forced to close this chat, as there is no response from your end. You can contact us at your convenient time. We are available round the clock.Read03:05:21 amSantanu closed the chat. 
+        
+    
+
+        1. The issue in detail: Archive Clean up is not working. 2. User Details:Username: collectr@gmail.com
+                  EVS Server: evs5014.idrive.com
+                 Total quota: 5368709120000
+                  Used quota: 5596640541918
+              Account status: Y
+              Encryption Key: DEFAULT
+           UNDER MAINTENANCE: No
+                  Hard Limit: n
+                  DataCenter: 
+                       Dedup: on 3. Operating System Details: Windows 104. Troubleshooting steps followed:  - Archive clean up is not working - Took remote - Restarted IDrive services VSS and MSSCP and set them to run as automatic - Performed RecreateDB=1 - Did not work - Escalated   Remote Session: YES Anti-Virus Disabled: Not Applicable Firewall Disabled: Not Applicable Full permission available for the file & folder: YES Open Files Selected for Backup: Not Applicable Volume Shadow Copy Service is Running and set to Automatic: YES Microsoft Software Shadow Copy Provider is Running and set to Automatic: YES  Telnet working: Not Applicable Port 443 Allowed: Not Applicable Is G Data Anti-Virus installed: Not Applicable Is K9 Web Protection Software installed: Not Applicable Is PC Matic Software installed: Not Applicable
+        
+    
+
+        We found that you are using 5212 GB used out of 5000 GB of your total quota.
+        
+    
+
+         Cloud Backup Space  100%5212.28 GB of 5000.00 GB  
+        
+    
+
+        Success: Account upgraded to 5300 GB from 5000 GB
+        
+    
+
+        Hi Team,Please request the user for Remote Access.Regards,Kiran
+        
+    

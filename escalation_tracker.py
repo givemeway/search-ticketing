@@ -243,7 +243,6 @@ def find_due_date(session, departments, escalated,
     notes_len = len(notes)
     responses_len = len(responses)
     j = 0
-
     if "India Support" not in visited:
         extract_agents(session, departments, "India Support", visited)
 
@@ -487,7 +486,7 @@ def add_note(session, title, body, url, CSRFToken, id, error):
             "locktime": "0",
             "a": "postnote",
             "title": title,
-            "note": body,
+            "note": "{} - {} days - {}".format(body[0], body[1], body[2]),
         }
         return session.post(url, data=body)
     except Exception as e:
@@ -500,7 +499,7 @@ def edit_note(session, title, body, url, CSRFToken, error):
     try:
         body = {
             "title": title,
-            "body": body,
+            "body": "{} - {} days - {}".format(body[0], body[1], body[2]),
             "__CSRFToken__": CSRFToken,
             "commit": "save"
         }
@@ -530,12 +529,12 @@ def process_notes(ticket, payload):
             ticket_id = query_params.get("id")[0]
             mode = note_mode(threads, owner)
             if mode['note'] == "add":
-                add_note(session, "Need Update", ticket[1],
+                add_note(session, "Need Update", ticket,
                          url, CSRFToken, ticket_id, error)
             elif mode['note'] == "edit":
                 note_id = mode["id"]
                 edit_url = note_edit_url.format(ticket_id, note_id)
-                edit_note(session, "Need Update", ticket[1],
+                edit_note(session, "Need Update", ticket,
                           edit_url, CSRFToken, error)
             per = math.ceil((idx/payload['total'])*100)
             payload["pBar"].emit(per)
@@ -553,7 +552,7 @@ def note_update_worker(_dict):
     payload["session"] = _dict["session"]
     payload["CSRFToken"] = _dict["CSRFToken"]
 
-    with ThreadPoolExecutor(1) as exe:
+    with ThreadPoolExecutor(3) as exe:
         futures = [exe.submit(process_notes, ticket, payload)
                    for ticket in tickets]
         for future in futures:

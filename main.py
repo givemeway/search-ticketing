@@ -7,6 +7,7 @@ from PyQt5 import QtGui
 import sys
 import os
 import csv
+from call_audit import call_audit_worker
 from parse import error
 from math import ceil
 from parse import get_mbox, process_emls
@@ -162,13 +163,14 @@ class EscalationWorker(QObject):
     warning = pyqtSignal(object)
     processing = pyqtSignal(tuple)
 
-    def __init__(self, tickets, session, tracker, owner=None, CSRFToken=None):
+    def __init__(self, tickets, session, tracker, dir="", owner=None, CSRFToken=None):
         super().__init__()
         self.tickets = tickets
         self.session = session
         self.tracker = tracker
         self.owner = owner
         self.CSRFToken = CSRFToken
+        self.dir = dir
 
     def run(self):
         _dict = {'tickets': self.tickets,
@@ -179,7 +181,8 @@ class EscalationWorker(QObject):
                  'error': self.error,
                  'total': len(self.tickets),
                  "owner": self.owner,
-                 "CSRFToken": self.CSRFToken
+                 "CSRFToken": self.CSRFToken,
+                 "dir": self.dir
                  }
         if self.tracker == "AGENT":
             agent_tracker_worker(_dict)
@@ -187,6 +190,8 @@ class EscalationWorker(QObject):
             escalation_worker(_dict)
         elif self.tracker == "NOTES":
             note_update_worker(_dict)
+        elif self.tracker == 'AUDIT':
+            call_audit_worker(self.session, self.dir)
         self.finished.emit()
 
 
@@ -283,6 +288,7 @@ class MainApp(QMainWindow):
             self.updateRadioSelection)
         self.ui.escalation_radioButton.clicked.connect(
             self.updateRadioSelection)
+        self.ui.audit_radio.clicked.connect(self.updateRadioSelection)
 
         # ============================================================ #
         self.isSessionExpired = False
@@ -376,8 +382,14 @@ class MainApp(QMainWindow):
         except Exception as e:
             error.exception(e)
 
-        self.csvPath, _ = QFileDialog.getOpenFileName(
-            self, msg, prevCSVPath, filter)
+        if self.tracker == "AUDIT":
+            self.csvPath = QFileDialog.getExistingDirectory(
+                self, msg, prevCSVPath)
+            print(self.csvPath)
+        else:
+
+            self.csvPath, _ = QFileDialog.getOpenFileName(
+                self, msg, prevCSVPath, filter)
         if len(self.csvPath) > 0:
             self.ui.tracker_pushButton.setHidden(False)
             try:
@@ -394,6 +406,8 @@ class MainApp(QMainWindow):
             self.tracker = "ESCALATION"
         elif self.ui.notes_radioButton.isChecked():
             self.tracker = "NOTES"
+        elif self.ui.audit_radio.isChecked():
+            self.tracker = "AUDIT"
 
     def escalationSearch(self):
         self.time = 0
@@ -402,14 +416,14 @@ class MainApp(QMainWindow):
         self.timer.timeout.connect(self.Counter)
         self.tickets = []
         self.ui.escalation_progressBar.setValue(0)
-        self.tickets = self.extract_tickets(self.csvPath)
-        print(self.tickets)
+        if self.tracker != "AUDIT":
+            self.tickets = self.extract_tickets(self.csvPath)
         self.text_gif = QMovie(get_path('gifs/text_fading.gif'))
         self.ui.escalation_groupLabel.setMovie(self.text_gif)
         self.startAnimation(self.text_gif)
 
         self.escalationworker = EscalationWorker(
-            self.tickets, self.session, self.tracker, self.owner, self.CSRFToken)
+            self.tickets, self.session, self.tracker, self.csvPath, self.owner, self.CSRFToken)
         self.escalationThread = QThread()
         self.escalationworker.moveToThread(self.escalationThread)
         self.escalationThread.started.connect(self.escalationworker.run)
@@ -417,7 +431,7 @@ class MainApp(QMainWindow):
         self.escalationworker.finished.connect(
             self.escalationworker.deleteLater)
         self.escalationworker.finished.connect(lambda: self.showDialog(
-            "Escalation Tracker", QMessageBox.Information, "Escalation Tracker Complete!" if self.tracker == "ESCALATION" else "Notes Update Complete!" if self.tracker == "NOTES" else "Agents Tracker Complete!"))
+            "Escalation Tracker", QMessageBox.Information, "Escalation Tracker Complete!" if self.tracker == "ESCALATION" else "Notes Update Complete!" if self.tracker == "NOTES" else "Agents Tracker Complete!" if self.tracker == "AGENT" else "Audit Complete!"))
         self.escalationworker.finished.connect(
             lambda: self.ui.tracker_pushButton.setEnabled(True))
         self.escalationworker.finished.connect(
@@ -470,7 +484,7 @@ class MainApp(QMainWindow):
                             self.owner = row[0]
                         elif idx > 1:
                             tickets.append(row)
-
+            print("Tickets: ", tickets)
             return tickets
         except Exception as e:
             error.exception(e)
