@@ -62,6 +62,7 @@ indiasupportAgents = ['Sandeep Kumar G R', 'Santanu Chowdhury', 'Nandu Suresh', 
 
 
 exclude = set(exclude)
+note_body = ".thread-entry.note .thread-body"
 selector1 = ".thread-entry.note .header b"
 selector2 = ".thread-entry.note .header time"
 selector4 = ".thread-entry.response .header b"
@@ -125,6 +126,32 @@ def find_notes(soup, selector1, selector2):
                       "time": time.get_text().strip(),
                       "timestamp": datetime.strptime(time.get_text().strip().replace("\u202f", " "),
                                                      '%m/%d/%y %I:%M %p').timestamp()
+                      })
+    return notes
+
+
+def paranthesis_string(strings):
+    formatted_text = ("")
+    for string in strings:
+        formatted_text += string + "\n"
+    return formatted_text
+
+
+def find_notes_with_body(soup, selector1, selector2):
+    # .thread-entry.message .header  --> user response
+    # .thread-entry.note .header --> notes
+    # .thread-event.action .faded.description  --> thread action
+    # .thread-entry.response .header     --> agent response
+    notes = []
+    for b, time, body in zip_longest(soup.select(selector1), soup.select(selector2), soup.select(note_body)):
+        #         print(b.get_text().strip(),time.get_text().strip())
+        notes.append({"agent": b.get_text().strip(),
+                      "time": time.get_text().strip().replace("\u202f", " "),
+                      "timestamp": datetime.strptime(time.get_text().strip().replace("\u202f", " "),
+                                                     '%m/%d/%y %I:%M %p').timestamp(),
+                      "type": "note",
+                      #   "body": paranthesis_string(body.get_text().split("\n"))
+                      "body": body.get_text()
                       })
     return notes
 
@@ -219,11 +246,12 @@ def extract_agents(session, departments, department, visited):
     try:
         agentsURL = departments[department]
         agents = set(get_agents_or_departments(session, agentsURL))
-        if department == "India Support":
-            agents = set(indiasupportAgents)
-            visited["India Support"] = agents
-        else:
-            visited[department] = agents - set(indiasupportAgents)
+        visited[department] = agents
+        # if department == "India Support":
+        #     agents = set(indiasupportAgents)
+        #     visited["India Support"] = agents
+        # else:
+        #     visited[department] = agents - set(indiasupportAgents)
         return agents
 
     except Exception as e:

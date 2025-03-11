@@ -7,7 +7,7 @@ from PyQt5 import QtGui
 import sys
 import os
 import csv
-from call_audit import call_audit_worker
+from call_audit import call_audit_worker, audit_notes
 from parse import error
 from math import ceil
 from parse import get_mbox, process_emls
@@ -192,6 +192,8 @@ class EscalationWorker(QObject):
             note_update_worker(_dict)
         elif self.tracker == 'AUDIT':
             call_audit_worker(self.session, self.dir)
+        elif self.tracker == "AUDIT_NOTES":
+            audit_notes(_dict)
         self.finished.emit()
 
 
@@ -289,6 +291,7 @@ class MainApp(QMainWindow):
         self.ui.escalation_radioButton.clicked.connect(
             self.updateRadioSelection)
         self.ui.audit_radio.clicked.connect(self.updateRadioSelection)
+        self.ui.audit_notes_radio.clicked.connect(self.updateRadioSelection)
 
         # ============================================================ #
         self.isSessionExpired = False
@@ -408,6 +411,9 @@ class MainApp(QMainWindow):
             self.tracker = "NOTES"
         elif self.ui.audit_radio.isChecked():
             self.tracker = "AUDIT"
+        elif self.ui.audit_notes_radio.isChecked():
+            self.tracker = "AUDIT_NOTES"
+        print("tracker: -->", self.tracker)
 
     def escalationSearch(self):
         self.time = 0
@@ -416,6 +422,7 @@ class MainApp(QMainWindow):
         self.timer.timeout.connect(self.Counter)
         self.tickets = []
         self.ui.escalation_progressBar.setValue(0)
+        print("tracker: ", self.tracker)
         if self.tracker != "AUDIT":
             self.tickets = self.extract_tickets(self.csvPath)
         self.text_gif = QMovie(get_path('gifs/text_fading.gif'))
@@ -476,13 +483,16 @@ class MainApp(QMainWindow):
             with open(csvFilePath, 'r', encoding='utf-8') as file:
                 reader = csv.reader(file, delimiter=',')
                 for idx, row in enumerate(reader):
-                    if self.tracker != "NOTES":
+                    if self.tracker != "NOTES" and self.tracker != "AUDIT_NOTES":
                         if idx > 1:
                             tickets.append(row[0])
-                    else:
+                    if self.tracker == "NOTES":
                         if idx == 1:
                             self.owner = row[0]
                         elif idx > 1:
+                            tickets.append(row)
+                    if self.tracker == "AUDIT_NOTES":
+                        if idx >= 1:
                             tickets.append(row)
             print("Tickets: ", tickets)
             return tickets
