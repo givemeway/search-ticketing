@@ -245,7 +245,9 @@ def extract_departments(csvFilePath):
 def extract_agents(session, departments, department, visited):
     try:
         agentsURL = departments[department]
-        agents = set(get_agents_or_departments(session, agentsURL))
+        print(agentsURL)
+        agentList = get_agents_or_departments(session, agentsURL)
+        agents = set(agentList)
         visited[department] = agents
         # if department == "India Support":
         #     agents = set(indiasupportAgents)
