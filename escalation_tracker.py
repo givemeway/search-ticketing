@@ -71,8 +71,8 @@ selector7 = ".thread-entry.message .header time"
 selector6 = ".thread-entry.message .header b"
 selector3 = ".thread-event.action .faded.description:has(>b:first-child):has(>time):has(>strong)"
 depart_head_selector = "div#content > :nth-child(3) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(3) >:nth-child(1)"
-depart_name_selector = "div#content > :nth-child(3) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(3) >:nth-child(2)"
-assigned_agent_selector = "div#content > :nth-child(5) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(2)"
+depart_name_selector = "div#content > :nth-child(4) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(3) >:nth-child(2)"
+assigned_agent_selector = "div#content > :nth-child(6) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(1) >:nth-child(2)"
 
 
 if sys.platform.startswith('win'):
@@ -93,7 +93,6 @@ def extract_ticket_url(soup, ticket):
 def find_responses(soup, selector1, selector2):
     responses = []
     for b, time in zip_longest(soup.select(selector1), soup.select(selector2)):
-        #         print(b.get_text().strip(),time.get_text().strip())
         responses.append({"agent": b.get_text().strip(),
                           "time": time.get_text().strip(),
                           "timestamp": datetime.strptime(time.get_text().strip().replace("\u202f", " "),
@@ -105,7 +104,6 @@ def find_responses(soup, selector1, selector2):
 def find_messages(soup, selector1, selector2):
     messages = []
     for b, time in zip_longest(soup.select(selector1), soup.select(selector2)):
-        #         print(b.get_text().strip(),time.get_text().strip())
         messages.append({"agent": b.get_text().strip(),
                          "time": time.get_text().strip(),
                          "timestamp": datetime.strptime(time.get_text().strip().replace("\u202f", " "),
@@ -121,7 +119,6 @@ def find_notes(soup, selector1, selector2):
     # .thread-entry.response .header     --> agent response
     notes = []
     for b, time in zip_longest(soup.select(selector1), soup.select(selector2)):
-        #         print(b.get_text().strip(),time.get_text().strip())
         notes.append({"agent": b.get_text().strip(),
                       "time": time.get_text().strip(),
                       "timestamp": datetime.strptime(time.get_text().strip().replace("\u202f", " "),
@@ -144,7 +141,6 @@ def find_notes_with_body(soup, selector1, selector2):
     # .thread-entry.response .header     --> agent response
     notes = []
     for b, time, body in zip_longest(soup.select(selector1), soup.select(selector2), soup.select(note_body)):
-        #         print(b.get_text().strip(),time.get_text().strip())
         notes.append({"agent": b.get_text().strip(),
                       "time": time.get_text().strip().replace("\u202f", " "),
                       "timestamp": datetime.strptime(time.get_text().strip().replace("\u202f", " "),
@@ -245,9 +241,10 @@ def extract_departments(csvFilePath):
 def extract_agents(session, departments, department, visited):
     try:
         agentsURL = departments[department]
-        print(agentsURL)
         agentList = get_agents_or_departments(session, agentsURL)
         agents = set(agentList)
+        if department == "RemotePC Development":
+            agents.add("Santosh Kumar")
         visited[department] = agents
         # if department == "India Support":
         #     agents = set(indiasupportAgents)
@@ -334,7 +331,21 @@ def get_ticket_html_content(session, ticket):
         return (soup, assigned_department, assigned_agent, ticketURL)
     except Exception as e:
         error.exception(e)
+        print(e)
         return None
+def get_notes_html_content(session, ticket):
+    try:
+        ticketSearch = search_query(session, searchQuery=ticket)
+        searchSoup = BeautifulSoup(ticketSearch.content, 'html5lib')
+        ticketURL = extract_ticket_url(searchSoup, ticket)
+        ticketContent = search_query(session, ticketURL=ticketURL)
+        soup = BeautifulSoup(ticketContent.content, 'html5lib')
+        return (soup, ticketURL)
+    except Exception as e:
+        error.exception(e)
+        print(e)
+        return None
+
 
 
 def find_res_pending(responses, messages):
@@ -549,9 +560,9 @@ def process_notes(ticket, payload):
     owner = payload["owner"]
     error = payload["error"]
     warning = payload["warning"]
-    html_soup = get_ticket_html_content(session, ticket[0])
+    html_soup = get_notes_html_content(session, ticket[0])
     if html_soup is not None:
-        soup, _, _, url = html_soup
+        soup, url = html_soup
         if (isinstance(soup, bs4.BeautifulSoup)):
             threads = find_thread_id(soup)
             parsedURL = urlparse(url)
@@ -569,7 +580,6 @@ def process_notes(ticket, payload):
             per = math.ceil((idx/payload['total'])*100)
             payload["pBar"].emit(per)
 
-
 def note_update_worker(_dict):
     tickets = _dict["tickets"]
     payload = {}
@@ -581,13 +591,12 @@ def note_update_worker(_dict):
     payload["owner"] = _dict["owner"]
     payload["session"] = _dict["session"]
     payload["CSRFToken"] = _dict["CSRFToken"]
-
+    print("Processing Notes.......")
     with ThreadPoolExecutor(3) as exe:
         futures = [exe.submit(process_notes, ticket, payload)
                    for ticket in tickets]
         for future in futures:
             done = future.result()
-            print(done)
 
 
 def create_agent_dataframe_csv(processed_tickets):
@@ -658,6 +667,7 @@ def write_csv(csvFilePath, columns, arr):
                 writer.writerow(row)
     except Exception as e:
         error.exception(e)
+        print(e)
         return e
 
 

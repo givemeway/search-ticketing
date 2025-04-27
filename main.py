@@ -494,7 +494,6 @@ class MainApp(QMainWindow):
                     if self.tracker == "AUDIT_NOTES":
                         if idx >= 1:
                             tickets.append(row)
-            print("Tickets: ", tickets)
             return tickets
         except Exception as e:
             error.exception(e)

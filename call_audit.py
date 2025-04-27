@@ -23,7 +23,10 @@ def time_to_seconds(time_str):
     if time_str == "24:00:00":  # Special case for 24:00:00
         return 24 * 60
     time_obj = datetime.strptime(time_str, "%H:%M:%S")
-    return (time_obj.hour * 3600 + time_obj.minute * 60 + time_obj.second) / 60
+    seconds = time_obj.hour * 3600 + time_obj.minute * 60 + time_obj.second
+    minutes = seconds // 60 
+    seconds = seconds % 60 
+    return f"{minutes} mm: {seconds} ss"
 
 def extract_duration(file_path):
         filename = os.path.basename(file_path)
@@ -34,14 +37,41 @@ def extract_duration(file_path):
                     lastline = lines.pop()
                     matches = re.findall(time_regex,lastline)
                     if len(matches) > 0:
-                        duration =  time_to_seconds(matches[-1])
-                        return f"{duration:.2f}"
+                        return matches[-1]
+
+
+def bytes_to_human_readable(_bytes):
+    kb = 0 
+    mb = 0 
+    gb = 0 
+    tb = 0 
+    pb = 0 
+    if _bytes > 1024:
+        kb = _bytes / 1024
+    else:
+        return f"{_bytes} Bytes"
+    if kb > 1024:
+        mb = kb / 1024
+    else: 
+        return f"{kb:.2f} KB"
+    if mb > 1024:
+        gb = mb / 1024
+    else:
+        return f"{mb:.2f} MB"
+    if gb > 1024:
+        tb = gb / 1024
+    else: 
+        return f"{gb:.2f} GB"
+    if tb > 1024:
+        pb = tb / 1024
+    else:
+        return f"{tb:.2f} TB"
 
 def get_file_info(session, file_path):
     try:
 
         file_name = os.path.basename(file_path)
-        file_size = os.path.getsize(file_path) / 1024  # Size in bytes
+        file_size = os.path.getsize(file_path)   # Size in bytes
         print("file_path",file_path)
         ticket = file_name.split(".")[0].split("-")[1].strip()
         agent_name = file_name.split(".")[0].split("-")[0].strip()
@@ -55,7 +85,8 @@ def get_file_info(session, file_path):
                 "file_name": file_name.split(".")[0],
                 "ticket": ticket,
                 "line_count": "NA",
-                "file_size": "{}kb".format(round(file_size),2),
+                #"file_size": "{}kb".format(round(file_size),2),
+                "file_size": bytes_to_human_readable(file_size),
                 "size": round(file_size,2),
                 "duration": 0
             }
@@ -74,7 +105,8 @@ def get_file_info(session, file_path):
                 "file_name": file_name.split(".")[0],
                 "ticket": ticket,
                 "line_count": line_count,
-                "file_size": '{}kb'.format(round(file_size, 2)),
+                #"file_size": '{}kb'.format(round(file_size, 2)),
+                "file_size": bytes_to_human_readable(file_size),
                 "size": round(file_size, 2),
                 "duration": extract_duration(file_path)
                 }
