@@ -18,8 +18,6 @@ from searchTicket import ticketing, get_path
 from escalation_tracker import escalation_worker, agent_tracker_worker, note_update_worker
 from copy import deepcopy
 # import webbrowser
-
-# implement
 # https://stackoverflow.com/questions/12009134/adding-widgets-to-qtablewidget-pyqt
 # https://learndataanalysis.org/create-hyperlinks-pyqt5-tutorial/
 
@@ -109,13 +107,13 @@ class TwoStepVerificationWorker(QObject):
 
     def run(self):
         _session = self.session
-        status, msg = verify2FA(self.sessionData, _session)
+        status, msg, data = verify2FA(self.sessionData, _session)
         if status == 200:
             self.result.emit((status, msg))
         elif status == 403:
             self.result.emit((status, 'Login Forbidden'))
         elif status == 401:
-            self.result.emit((status, msg))
+            self.result.emit((status, msg, data))
         else:
             self.error.emit((status, msg))
         self.finished.emit()
@@ -314,8 +312,9 @@ class MainApp(QMainWindow):
         self.username = None
         self.password = None
         self._2FA_loginData = {'__CSRFToken__': "",
-                               "do": "2fa", "sessioncode": ""}
+                               "do": "2fa", "sessionID": ""}
         self._2FA_prompt = False
+        self._pre_2fa_session = ""
         # setup context menu in Table
         # https://stackoverflow.com/questions/50768366/installeventfilter-in-pyqt5
         # https://stackoverflow.com/questions/65371143/create-a-context-menu-with-pyqt5/65371906#65371906
@@ -428,7 +427,6 @@ class MainApp(QMainWindow):
         self.text_gif = QMovie(get_path('gifs/text_fading.gif'))
         self.ui.escalation_groupLabel.setMovie(self.text_gif)
         self.startAnimation(self.text_gif)
-
         self.escalationworker = EscalationWorker(
             self.tickets, self.session, self.tracker, self.csvPath, self.owner, self.CSRFToken)
         self.escalationThread = QThread()
@@ -579,7 +577,7 @@ class MainApp(QMainWindow):
             self.setbtngrey(self.ui.btn_login_2)
             sessionID = self._2FA_loginData["sessionID"]
             self._2FA_loginData[sessionID] = int(self.code)
-            del self._2FA_loginData["sessionID"]
+            # del self._2FA_loginData["sessionID"]
             self.verify_2FA_code(self._2FA_loginData)
 
     def verify_2FA_code(self, data):
@@ -641,6 +639,7 @@ class MainApp(QMainWindow):
     @pyqtSlot(object)
     def update2FAData(self, data):
         self._2FA_loginData = data
+        self._pre_2fa_session = data
 
     @pyqtSlot(object)
     def ticketSession(self, _sess):
@@ -678,7 +677,7 @@ class MainApp(QMainWindow):
             self.ui.loading_2.setWordWrap(True)
             self.displaymsg(self.ui.loading, status[1])
             self.displaymsg(self.ui.loading_2, status[1])
-
+            self._2FA_loginData = status[2]
             self.disableTabs()
             self.showDialog("Login Error", QMessageBox.Critical, status[1])
 

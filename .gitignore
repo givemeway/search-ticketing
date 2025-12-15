@@ -1,6 +1,0 @@
-dist
-build
-__pycache__
-*.exe
-*.mbox
-*.db

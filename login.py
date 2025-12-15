@@ -1,13 +1,14 @@
 import sqlite3
 import requests
 import os
+import pickle
 from bs4 import BeautifulSoup
 headers = {
-    'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36"
+    'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:138.0) Gecko/20100101 Firefox/138.0"
 }
 login_data = {
-    'do': "scplogin",
-    'userid': "sandeep.kumar@idrive.com",
+    'do': "",
+    'userid': "",
     'passwd': "",
     'submit': ''
 }
@@ -110,16 +111,29 @@ def verify2FA(sessionData, _session):
 
         if status == 200:
             _session.emit(s)
-            return (200, "SUCCESS")
+            print("saving the session to pickle")
+            with open('session.pickle', 'wb') as f:
+                pickle.dump(s.cookies, f)
+            return (200, "SUCCESS", "")
         elif status == 401 and isinstance(msg, dict):
-            return (401, "Invalid Code")
+            label_2fa = loginPageSoup.select(
+                "div.field-label.required")[0].find("label").get("for")
+            CSRF = loginPageSoup.find(
+                'input', attrs={'name': '__CSRFToken__'})['value']
+            login_data = {}
+            login_data['__CSRFToken__'] = CSRF
+            login_data[label_2fa] = ""
+            login_data['sessionID'] = label_2fa
+            login_data['do'] = "2fa"
+            login_data['session'] = s
+            return (401, "Invalid Code", login_data)
         elif status == 401 and isinstance(msg, str):
             query = '''DELETE FROM login WHERE rowid=1'''
             conn = create_connection('ticket.db')
             with conn:
                 cur = conn.cursor()
                 cur.execute(query)
-            return (401, msg)
+            return (401, msg, "")
     except requests.exceptions.HTTPError as errh:
         return (request_errors[0], errh)
     except requests.exceptions.ConnectionError as errc:
@@ -139,7 +153,20 @@ def ticket_session(name, secret, _session, _2fa, CSRFToken, isExpired=False):
             if r.status_code == 403:
                 return (403, "Login Forbidden")  # unauthorized
             else:
-                return build_header(r, s, url, name, secret, _session, _2fa, CSRFToken)
+                try:
+                    with open('session.pickle', 'rb') as f:
+                        s.cookies.update(pickle.load(f))
+                        status, msg = validateLogin(r, s)
+                        if status == 200:
+                            _session.emit(s)
+                            return (200, "SUCCESS")
+                        else:
+                            os.remove('session.pickle')
+                            return build_header(r, s, url, name, secret, _session, _2fa, CSRFToken)
+
+                except Exception as e:
+                    print("Session file is empty, creating a new session.")
+                    return build_header(r, s, url, name, secret, _session, _2fa, CSRFToken)
         except requests.exceptions.HTTPError as errh:
             return (request_errors[0], errh)
         except requests.exceptions.ConnectionError as errc:
@@ -173,9 +200,10 @@ def ticket_session(name, secret, _session, _2fa, CSRFToken, isExpired=False):
 def validateLogin(r, session, username=None, password=None):
     loginPageSoup = BeautifulSoup(r.content, 'html5lib')
     loginMsg = loginPageSoup.find(id="login-message")
+    print("Login Message is -- ", loginMsg)
     if loginMsg is not None and len(loginMsg) > 0:
-        loginMsg = loginMsg.getText().strip()
-        if loginMsg == "Invalid login" or loginMsg == "Authentication Required":
+        loginMsg = loginMsg.getText().strip().lower()
+        if loginMsg == "Invalid login".lower() or loginMsg == "Authentication Required".lower():
             query = '''DELETE FROM login WHERE rowid=1'''
             conn = create_connection('ticket.db')
             with conn:
@@ -183,14 +211,14 @@ def validateLogin(r, session, username=None, password=None):
                 cur.execute(query)
             return (401, loginMsg)
 
-        elif loginMsg == "Access denied":
+        elif loginMsg == "Access denied".lower():
             query = '''DELETE FROM login WHERE rowid=1'''
             conn = create_connection('ticket.db')
             with conn:
                 cur = conn.cursor()
                 cur.execute(query)
             return (401, loginMsg)
-        elif loginMsg == "2FA Pending":
+        elif loginMsg == "2FA Pending".lower():
             label_2fa = loginPageSoup.select(
                 "div.field-label.required")[0].find("label").get("for")
             CSRF = loginPageSoup.find(
@@ -203,7 +231,7 @@ def validateLogin(r, session, username=None, password=None):
             login_data['session'] = session
             updateDB(username, password)
             return (401, login_data)
-        elif loginMsg == "Invalid Code":
+        elif loginMsg == "Invalid Code".lower():
             return (401, loginMsg)
     else:
         return (200, 'Success')
@@ -248,9 +276,13 @@ def build_header(r, s, url, username, password, _session, _2fa, CSRFToken):
         CSRFToken.emit(login_data['__CSRFToken__'])
         r = s.post(url, data=login_data, headers=headers)
         status, data = validateLogin(r, s, username, password)
+        print("Status is ", status, " and data is ", data)
 
         if status == 200:
             updateDB(username, password)
+            with open('session.pickle', 'wb') as f:
+                print("saving the session to pickle")
+                pickle.dump(s.cookies, f)
             _session.emit(s)
             return (200, "SUCCESS")
         elif status == 401 and isinstance(data, dict):

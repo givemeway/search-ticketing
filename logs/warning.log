@@ -1,0 +1,48 @@
+2025-12-15 21:06:58,037:WARNING:Subject: Just Posted: 40 jobs that match your interest : From: alert@email.nexxt.com : Emails in body : ['info@idrive.com']
+2025-12-15 21:06:58,814:WARNING:Subject: IDrive Windows error report [#Testing] : From: support@idrive.com : Emails in body : ['support@idrive.com']
+2025-12-15 21:06:58,900:WARNING:Subject: Monit instance changed for 10.10.1.215.idrive.com on 10.10.1.215.idrive.com : From: support@idrive.com : Emails in body : []
+2025-12-15 21:06:59,001:WARNING:Subject: [AI Challenge] | Imagine the future. Create limitless possibilities : From: newsletter@info.alibabacloud.com : Emails in body : ['//www.tiktok.com/@alibaba']
+2025-12-15 21:06:59,099:WARNING:Subject: Connection failed for tomcat-backend-check on 10.10.1.177.idrive.com : From: support@idrive.com : Emails in body : []
+2025-12-15 21:06:59,227:WARNING:Subject: Connection succeeded for tomcat-backend-check on 10.10.1.177.idrive.com : From: support@idrive.com : Emails in body : []
+2025-12-15 21:06:59,303:WARNING:Subject: New Jobs Found in the Portland Area : From: jfw@email.nexxt.com : Emails in body : []
+2025-12-15 21:06:59,389:WARNING:Subject: Top Job: Lead Transmission Line : From: TopJob@email.nexxt.com : Emails in body : ['info@idrive.com']
+2025-12-15 21:07:00,449:WARNING:Subject: [AI Challenge] | Imagine the future. Create limitless possibilities : From: info@remotepc.com : Emails in body : ['//www.tiktok.com/@alibaba', 'info+unsubscribe@remotepc.com']
+2025-12-15 21:07:00,462:WARNING:Subject: [A'dan Z'ye Mutfak 5] =?utf-8?q?Et_Kemik_Kesme_Testereleri_End?=
+ =?utf-8?q?=C3=BCstriyel_Mutfak_Makineleri?= : From: info@remotepc.com : Emails in body : ['proje@mutfakmalzem', 'proje@mutfakmalzemeleri.com', 'info+unsubscribe@remotepc.com']
+2025-12-15 21:07:00,485:WARNING:Subject: Monit instance changed for 10.10.1.216.idrive.com on 10.10.1.216.idrive.com : From: support@idrive.com : Emails in body : []
+2025-12-15 21:07:00,531:WARNING:Subject: Alert: Network Monitoring Security, Systems Engineer, Senior
+ Specialist Mast & more : From: alert@email.nexxt.com : Emails in body : ['fo@idrive.com']
+2025-12-15 21:07:00,668:WARNING:Subject: Alert: We found 27 jobs in Portland, OR : From: alert@email.nexxt.com : Emails in body : ['info@idrive.com']
+2025-12-15 21:07:04,256:WARNING:Email_Subject = =?UTF-8?Q?Ticket_Received_-_IDrive=C2=AE_360_-_Your_device_has_not?=
+ =?UTF-8?Q?_been_backed_up_recently!?= : Parsed Subject = =?UTF-8?Q?Ticket_Received_-_IDrive=C2=AE_360_-_Your_device_has_not?=
+ =?UTF-8?Q?_been_backed_up_recently!?=
+2025-12-15 21:07:12,566:WARNING:Email_Subject = Photo relay server mum-uploader-1.idrive.com down. Please Check. : Parsed Subject = Photo relay server mum-uploader-1.idrive.com down. Please Check.
+2025-12-15 21:07:13,344:WARNING:Email_Subject = Second IDrive Sent : Parsed Subject = Second IDrive Sent
+2025-12-15 21:07:29,923:WARNING:Email_Subject = =?UTF-8?Q?Re=3A_I_noticed_a_payment_coming_out_of_my_account_for?=
+	=?UTF-8?Q?_=C2=A3_=5B=23ID592729429=5D?= : Parsed Subject = =?UTF-8?Q?Re=3A_I_noticed_a_payment_coming_out_of_my_account_for?=
+	=?UTF-8?Q?_=C2=A3_=5B=23ID592729429=5D?=
+2025-12-15 21:07:35,097:WARNING:Email_Subject = Archive of Google data requested : Parsed Subject = Archive of Google data requested
+2025-12-15 21:07:35,142:WARNING:Email_Subject = Archive of Google data requested : Parsed Subject = Archive of Google data requested
+2025-12-15 21:07:35,180:WARNING:Email_Subject = Archive of Google data requested : Parsed Subject = Archive of Google data requested
+2025-12-15 21:07:37,602:WARNING:Email_Subject = Archive of Google data requested : Parsed Subject = Archive of Google data requested
+2025-12-15 21:07:54,341:WARNING:Email_Subject = Adding more iDrive 360 devices to our account : Parsed Subject = Adding more iDrive 360 devices to our account
+2025-12-15 21:08:19,642:WARNING:Email_Subject = Alert: OR2 RDP 172.16.0.22 Almost out of disk space (100%):Wed
+ Dec 10 08:26:34 PST 2025 : Parsed Subject = Alert: OR2 RDP 172.16.0.22 Almost out of disk space (100%):Wed
+ Dec 10 08:26:34 PST 2025
+2025-12-15 21:08:38,930:WARNING:Email_Subject = Photo relay server blr-uploader-1.idrive.com down. Please Check. : Parsed Subject = Photo relay server blr-uploader-1.idrive.com down. Please Check.
+2025-12-15 21:08:46,630:WARNING:Email_Subject = Your Google data is ready to download : Parsed Subject = Your Google data is ready to download
+2025-12-15 21:08:46,891:WARNING:Email_Subject = Your Google data is ready to download : Parsed Subject = Your Google data is ready to download
+2025-12-15 21:08:48,221:WARNING:Email_Subject = Your Google data is ready to download : Parsed Subject = Your Google data is ready to download
+2025-12-15 21:09:10,144:WARNING:Email_Subject = Your Google data is ready to download : Parsed Subject = Your Google data is ready to download
+2025-12-15 21:10:17,199:WARNING:Email_Subject = =?UTF-8?Q?Support_ticket_received_[14589]_-_IDrive=C2=AE_Google?=
+ =?UTF-8?Q?_Workspace_backup_has_been_enabled_for_your_account?= : Parsed Subject = =?UTF-8?Q?Support_ticket_received_[14589]_-_IDrive=C2=AE_Google?=
+ =?UTF-8?Q?_Workspace_backup_has_been_enabled_for_your_account?=
+2025-12-15 21:10:20,877:WARNING:Email_Subject = =?utf-8?q?Re=3A_Re=3A_Urgent=3A_Unable_to_process_your_IDrive_sub?=
+	=?utf-8?q?scription_charges_=5B=23ID499473341=5D?= : Parsed Subject = =?utf-8?q?Re=3A_Re=3A_Urgent=3A_Unable_to_process_your_IDrive_sub?=
+	=?utf-8?q?scription_charges_=5B=23ID499473341=5D?=
+2025-12-15 21:10:21,249:WARNING:Email_Subject = =?utf-8?q?Re=3A_Re=3A_Re=3A_Urgent=3A_Unable_to_process_your_IDri?=
+	=?utf-8?q?ve_subscription_charges=0D=0A_=5B=23ID499473341=5D?= : Parsed Subject = =?utf-8?q?Re=3A_Re=3A_Re=3A_Urgent=3A_Unable_to_process_your_IDri?=
+	=?utf-8?q?ve_subscription_charges=0D=0A_=5B=23ID499473341=5D?=
+2025-12-15 21:10:44,427:WARNING:Email_Subject = IDrive : =?UTF-8?B?4oCLSGk=?= there,I wanted to check if
+ =?UTF-8?B?aXTigJlz?= possible to ... : Parsed Subject = IDrive : =?UTF-8?B?4oCLSGk=?= there,I wanted to check if
+ =?UTF-8?B?aXTigJlz?= possible to ...

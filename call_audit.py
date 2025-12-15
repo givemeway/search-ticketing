@@ -73,8 +73,15 @@ def get_file_info(session, file_path):
         file_name = os.path.basename(file_path)
         file_size = os.path.getsize(file_path)   # Size in bytes
         print("file_path",file_path)
-        ticket = file_name.split(".")[0].split("-")[1].strip()
-        agent_name = file_name.split(".")[0].split("-")[0].strip()
+        text_file_name = file_name.split(".")[0]
+        ticket = ""
+        agent_name = ""
+        if text_file_name.find("-") > 0:
+            ticket = text_file_name.split("-")[1].strip()
+            agent_name = text_file_name.split("-")[0].strip()
+        elif text_file_name.find(" ") > 0:
+            ticket = text_file_name.split(" ")[1].strip()
+            agent_name = text_file_name.split(" ")[0].strip()
         print("ticket: ",ticket)
         print("agent name: ",agent_name)
         ext = file_name.split(".")[1]
@@ -199,6 +206,7 @@ def call_audit_worker(session, directory_path):
 
     for file_name in os.listdir(directory_path):
         file_path = os.path.join(directory_path, file_name)
+        print(file_path,file_name,file_name.endswith(".txt"))
         if os.path.isfile(file_path) and file_name.endswith(".txt"):
             info = get_file_info(session, file_path)
             if "error" not in info:
